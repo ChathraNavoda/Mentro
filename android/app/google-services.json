@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "194665787546",
+    "project_id": "mentro-31a64",
+    "storage_bucket": "mentro-31a64.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:194665787546:android:1d4e0972b41fe9b5c8ef23",
+        "android_client_info": {
+          "package_name": "com.example.mentro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1vVSmqxZb_CupWHU6zwQnA0esEC2I3Ao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
