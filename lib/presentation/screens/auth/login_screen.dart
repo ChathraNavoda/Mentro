@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mentro/presentation/common/button_widget.dart';
 import 'package:mentro/presentation/common/text_field_widget.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -53,6 +54,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+              Button(
+                onTap: () {},
+                text: 'Signin',
+              )
             ],
           ),
         ),
