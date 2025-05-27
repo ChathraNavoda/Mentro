@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:mentro/presentation/common/button_widget.dart';
 import 'package:mentro/presentation/common/text_field_widget.dart';
-import 'package:mentro/presentation/screens/auth/signup_screen.dart';
+import 'package:mentro/presentation/screens/auth/login_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
@@ -32,6 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               TextFieldInput(
+                textEditingController: nameController,
+                hintText: 'Username',
+                icon: Icons.person,
+              ),
+              TextFieldInput(
                 textEditingController: emailController,
                 hintText: 'Email',
                 icon: Icons.email,
@@ -41,30 +47,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 hintText: 'Password',
                 icon: Icons.lock,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'Forgot password?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF4ECDC4),
-                    ),
-                  ),
-                ),
-              ),
               Button(
                 onTap: () {},
-                text: 'Signin',
+                text: 'Signup',
               ),
               SizedBox(height: height / 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Don\'t have an account? ',
+                    'Already have an account? ',
                     style: TextStyle(
                       fontSize: 16,
                       color: Color.fromARGB(128, 0, 0, 0),
@@ -75,12 +67,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => SignupScreen(),
+                          builder: (context) => LoginScreen(),
                         ),
                       );
                     },
                     child: Text(
-                      'Signup',
+                      'Signin',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
