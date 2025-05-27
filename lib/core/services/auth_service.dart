@@ -5,7 +5,7 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<String> SignupUser({
+  Future<String> signupUser({
     required String name,
     required String email,
     required String password,
@@ -21,7 +21,7 @@ class AuthService {
         'email': email,
         'uid': credential.user!.uid,
       });
-      res = 'Succeed!';
+      res = 'success';
     } catch (e) {
       print(e.toString());
     }

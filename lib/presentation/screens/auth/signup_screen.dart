@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/presentation/common/button_widget.dart';
 import 'package:mentro/presentation/common/text_field_widget.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
+import 'package:mentro/presentation/screens/home/home_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,6 +16,22 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
+
+  void signupUser() async {
+    String res = await AuthService().signupUser(
+      name: nameController.text,
+      email: emailController.text,
+      password: passwordController.text,
+    );
+    if (res == 'success') {
+      setState(() {});
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomeScreen()));
+    } else {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
