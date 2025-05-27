@@ -57,7 +57,31 @@ class _LoginScreenState extends State<LoginScreen> {
               Button(
                 onTap: () {},
                 text: 'Signin',
-              )
+              ),
+              SizedBox(height: height / 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Don\'t have an account? ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color.fromARGB(128, 0, 0, 0),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {},
+                    child: Text(
+                      'Signup',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF4ECDC4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
