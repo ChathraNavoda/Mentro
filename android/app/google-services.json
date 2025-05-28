@@ -12,7 +12,20 @@
           "package_name": "com.example.mentro"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "194665787546-b2qlh5bq50mk7p4aajcaugkhk6fda8vp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mentro",
+            "certificate_hash": "90ef418eb60f3bf0894e775326823331e4f91e0e"
+          }
+        },
+        {
+          "client_id": "194665787546-d59b3gsds0ps7n2arq8jsiv0bjp04893.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD1vVSmqxZb_CupWHU6zwQnA0esEC2I3Ao"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "194665787546-9v1f8clpbbg3c2c0gltvfh5h41umuakv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
