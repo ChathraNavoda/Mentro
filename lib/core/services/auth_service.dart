@@ -48,4 +48,8 @@ class AuthService {
     }
     return res;
   }
+
+  Future<void> logout() async {
+    await _auth.signOut();
+  }
 }
