@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/presentation/common/button_widget.dart';
+import 'package:mentro/presentation/common/snackbar_widget.dart';
 import 'package:mentro/presentation/common/text_field_widget.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
 import 'package:mentro/presentation/screens/home/home_screen.dart';
@@ -16,6 +17,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
+  bool isLoading = false;
 
   void signupUser() async {
     String res = await AuthService().signupUser(
@@ -24,11 +26,16 @@ class _SignupScreenState extends State<SignupScreen> {
       password: passwordController.text,
     );
     if (res == 'success') {
-      setState(() {});
+      setState(() {
+        isLoading = true;
+      });
       Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => HomeScreen()));
     } else {
-      setState(() {});
+      setState(() {
+        isLoading = false;
+      });
+      showSnackBar(context, res);
     }
   }
 
@@ -38,69 +45,71 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SizedBox(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                height: height / 3.7,
-                width: double.infinity,
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  scale: 1.5,
-                ),
-              ),
-              TextFieldInput(
-                textEditingController: nameController,
-                hintText: 'Username',
-                icon: Icons.person,
-              ),
-              TextFieldInput(
-                textEditingController: emailController,
-                hintText: 'Email',
-                icon: Icons.email,
-              ),
-              TextFieldInput(
-                textEditingController: passwordController,
-                hintText: 'Password',
-                icon: Icons.lock,
-              ),
-              Button(
-                onTap: () {},
-                text: 'Signup',
-              ),
-              SizedBox(height: height / 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Already have an account? ',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color.fromARGB(128, 0, 0, 0),
-                    ),
+        child: SingleChildScrollView(
+          child: SizedBox(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: height / 3.7,
+                  width: double.infinity,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    scale: 1.5,
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => LoginScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Signin',
+                ),
+                TextFieldInput(
+                  textEditingController: nameController,
+                  hintText: 'Username',
+                  icon: Icons.person,
+                ),
+                TextFieldInput(
+                  textEditingController: emailController,
+                  hintText: 'Email',
+                  icon: Icons.email,
+                ),
+                TextFieldInput(
+                  textEditingController: passwordController,
+                  hintText: 'Password',
+                  icon: Icons.lock,
+                ),
+                Button(
+                  onTap: signupUser,
+                  text: 'Signup',
+                ),
+                SizedBox(height: height / 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Color(0xFF4ECDC4),
+                        color: Color.fromARGB(128, 0, 0, 0),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LoginScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Signin',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF4ECDC4),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
