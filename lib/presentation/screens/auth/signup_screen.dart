@@ -71,6 +71,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 TextFieldInput(
                   textEditingController: passwordController,
                   hintText: 'Password',
+                  isPass: true,
                   icon: Icons.lock,
                 ),
                 Button(

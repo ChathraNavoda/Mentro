@@ -12,16 +12,18 @@ class AuthService {
   }) async {
     String res = 'Some error occurred!';
     try {
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      await _firestore.collection('users').doc(credential.user!.uid).set({
-        'name': name,
-        'email': email,
-        'uid': credential.user!.uid,
-      });
-      res = 'success';
+      if (email.isNotEmpty || password.isNotEmpty || name.isNotEmpty) {
+        UserCredential credential = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        await _firestore.collection('users').doc(credential.user!.uid).set({
+          'name': name,
+          'email': email,
+          'uid': credential.user!.uid,
+        });
+        res = 'success';
+      }
     } catch (e) {
       print(e.toString());
     }
