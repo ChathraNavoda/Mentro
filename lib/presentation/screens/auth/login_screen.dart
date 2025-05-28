@@ -79,7 +79,95 @@ class _LoginScreenState extends State<LoginScreen> {
                 text: 'Signin',
               ),
               ForgotPassword(),
-              SizedBox(height: height / 16),
+              SizedBox(height: height / 40),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: const Color.fromARGB(111, 0, 0, 0),
+                    ),
+                  ),
+                  Text('Or'),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: const Color.fromARGB(111, 0, 0, 0),
+                    ),
+                  ),
+                ],
+              ),
+              // Padding(
+              //   padding: const EdgeInsets.all(20.0),
+              //   child: OutlinedButton(
+              //     onPressed: () {},
+              //     style: OutlinedButton.styleFrom(
+              //       backgroundColor: Colors.white,
+              //       side:
+              //           const BorderSide(color: Colors.black), // Black outline
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius:
+              //             BorderRadius.circular(20), // Rounded corners
+              //       ),
+              //       padding: const EdgeInsets.symmetric(
+              //         vertical: 18,
+              //         horizontal: 86,
+              //       ),
+              //     ),
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //       children: [
+              //         Image.network(
+              //           'https://static.vecteezy.com/system/resources/previews/022/613/027/non_2x/google-icon-logo-symbol-free-png.png',
+              //           height: 24,
+              //         ),
+              //         const SizedBox(width: 10),
+              //         const Text(
+              //           'Continue with Google',
+              //           style: TextStyle(
+              //             color: Colors.black,
+              //             fontWeight: FontWeight.w600,
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              InkWell(
+                onTap: () {},
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    decoration: ShapeDecoration(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: const BorderSide(
+                          color: Color.fromARGB(122, 0, 0, 0),
+                        ),
+                      ),
+                      color: Colors.white,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        const Text(
+                          'Continue with Google',
+                          style: TextStyle(
+                            color: Color.fromARGB(125, 0, 0, 0),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Image.network(
+                          'https://static.vecteezy.com/system/resources/previews/022/613/027/non_2x/google-icon-logo-symbol-free-png.png',
+                          height: 24,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
