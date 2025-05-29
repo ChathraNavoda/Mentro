@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mentro/core/services/auth_service.dart';
+import 'package:mentro/core/services/google_service.dart';
 import 'package:mentro/presentation/common/button_widget.dart';
 import 'package:mentro/presentation/common/snackbar_widget.dart';
 import 'package:mentro/presentation/common/text_field_widget.dart';
@@ -134,7 +135,15 @@ class _LoginScreenState extends State<LoginScreen> {
               //   ),
               // ),
               InkWell(
-                onTap: () {},
+                onTap: () async {
+                  await GoogleService().signInWithGoogle();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(),
+                    ),
+                  );
+                },
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Container(
