@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mentro/presentation/screens/auth/otp_screen.dart';
 
 class PhoneSigninScreen extends StatefulWidget {
   const PhoneSigninScreen({super.key});
@@ -99,17 +100,13 @@ class _PhoneSigninScreenState extends State<PhoneSigninScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF4ECDC4),
                     ),
-                    onPressed: () async {
-                      // await auth
-                      //     .sendPasswordResetEmail(email: emailController.text)
-                      //     .then((value) {
-                      //   showSnackBar(context,
-                      //       'We have sent you the reset password link to your email.');
-                      // }).onError((error, stackTrace) {
-                      //   showSnackBar(context, error.toString());
-                      // });
-                      // Navigator.pop(context);
-                      // emailController.clear();
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OTPScreen(),
+                        ),
+                      );
                     },
                     child: Text(
                       'Send Code',
