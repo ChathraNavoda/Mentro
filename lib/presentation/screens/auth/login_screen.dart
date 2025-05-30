@@ -6,7 +6,7 @@ import 'package:mentro/presentation/common/snackbar_widget.dart';
 import 'package:mentro/presentation/common/text_field_widget.dart';
 import 'package:mentro/presentation/screens/auth/forgot_pw_screen.dart';
 import 'package:mentro/presentation/screens/auth/signup_screen.dart';
-import 'package:mentro/presentation/screens/home/home_screen.dart';
+import 'package:mentro/presentation/screens/home/custom_bottom_navbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = true;
       });
       Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomeScreen()));
+          MaterialPageRoute(builder: (context) => CustomBottomNavbar()));
     } else {
       setState(() {
         isLoading = false;
@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => HomeScreen(),
+                    builder: (context) => CustomBottomNavbar(),
                   ),
                 );
               },

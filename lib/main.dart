@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
-import 'package:mentro/presentation/screens/home/home_screen.dart';
+import 'package:mentro/presentation/screens/home/custom_bottom_navbar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              return HomeScreen();
+              return CustomBottomNavbar();
             } else {
               return LoginScreen();
             }

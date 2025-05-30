@@ -4,9 +4,14 @@ import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/core/services/google_service.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,7 +36,7 @@ class HomeScreen extends StatelessWidget {
             Text('${FirebaseAuth.instance.currentUser!.email}'),
           ],
         ),
-      ),
+      ), // here,
     );
   }
 }
