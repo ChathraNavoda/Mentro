@@ -5,7 +5,6 @@ import 'package:mentro/presentation/common/button_widget.dart';
 import 'package:mentro/presentation/common/snackbar_widget.dart';
 import 'package:mentro/presentation/common/text_field_widget.dart';
 import 'package:mentro/presentation/screens/auth/forgot_pw_screen.dart';
-import 'package:mentro/presentation/screens/auth/phone_signin_screen.dart';
 import 'package:mentro/presentation/screens/auth/signup_screen.dart';
 import 'package:mentro/presentation/screens/home/home_screen.dart';
 
@@ -141,7 +140,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            PhoneSigninScreen(),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
