@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mentro/presentation/screens/home/add_ripple_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -41,7 +42,14 @@ class HomeScreen extends StatelessWidget {
               // Add Ripple Button
               Center(
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddRippleScreen(),
+                      ),
+                    );
+                  },
                   icon: const Icon(
                     Icons.add_circle_outline,
                     color: Color.fromARGB(255, 255, 255, 255),
