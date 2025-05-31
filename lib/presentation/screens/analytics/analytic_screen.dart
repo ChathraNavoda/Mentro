@@ -2,6 +2,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mentro/presentation/screens/analytics/daily_analysis_screen.dart';
 
 class MoodAnalyticsScreen extends StatefulWidget {
   const MoodAnalyticsScreen({super.key});
@@ -30,7 +31,6 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
     {'mood': 'Happy', 'percent': 20},
   ];
 
-  // Define this list inside _MoodAnalyticsScreenState if not already there
   final List<Map<String, dynamic>> emotionImages = [
     {'name': 'Happy', 'image': 'assets/images/happy.png'},
     {'name': 'Sad', 'image': 'assets/images/sad.png'},
@@ -86,7 +86,6 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
               ],
             ),
             const SizedBox(height: 30),
-            // Mock bar chart
             SizedBox(
               height: 150,
               child: BarChart(
@@ -135,8 +134,32 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                   borderData: FlBorderData(show: false),
                   barTouchData: BarTouchData(
                     enabled: true,
-                    touchCallback: (event, response) {
-                      // Show daily analytics on bar tap
+                    touchCallback:
+                        (FlTouchEvent event, BarTouchResponse? response) {
+                      if (response != null &&
+                          response.spot != null &&
+                          event is FlTapUpEvent) {
+                        int tappedIndex = response.spot!.touchedBarGroupIndex;
+                        final days = [
+                          'Sunday',
+                          'Monday',
+                          'Tuesday',
+                          'Wednesday',
+                          'Thursday',
+                          'Friday',
+                          'Saturday'
+                        ];
+                        String selectedDay = days[tappedIndex];
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DailyAnalysisScreen(
+                              dayIndex: tappedIndex,
+                              dayLabel: selectedDay,
+                            ),
+                          ),
+                        );
+                      }
                     },
                   ),
                 ),
@@ -155,36 +178,36 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                   GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
-            ...moodBreakdown.map(
-              (entry) {
-                final matching = emotionImages.firstWhere(
-                  (e) => e['name'].toLowerCase() == entry['mood'].toLowerCase(),
-                  orElse: () => {'image': null},
-                );
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (matching['image'] != null)
-                        Image.asset(
-                          matching['image'],
-                          width: 32,
-                          height: 32,
-                        )
-                      else
-                        const SizedBox(width: 32, height: 32),
-                      const SizedBox(width: 12),
-                      Text(
-                        '${entry['mood']} - ${entry['percent']}%',
-                        style: GoogleFonts.outfit(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            )
+            // ✅ Spread operator must be used inside a list structure
+            ...moodBreakdown.map((entry) {
+              final matching = emotionImages.firstWhere(
+                (e) => e['name'].toLowerCase() == entry['mood'].toLowerCase(),
+                orElse: () => {'image': null},
+              );
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (matching['image'] != null)
+                      Image.asset(
+                        matching['image'],
+                        width: 32,
+                        height: 32,
+                      )
+                    else
+                      const SizedBox(width: 32, height: 32),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${entry['mood']} - ${entry['percent']}%',
+                      style: GoogleFonts.outfit(fontSize: 16),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
       ),
