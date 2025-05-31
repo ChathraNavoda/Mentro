@@ -16,7 +16,7 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
 
   final List<Widget> pages = const [
     HomeScreen(),
-    AnalyticsScreen(),
+    MoodAnalyticsScreen(),
     HistoryScreen(),
     SettingsScreen(),
   ];
