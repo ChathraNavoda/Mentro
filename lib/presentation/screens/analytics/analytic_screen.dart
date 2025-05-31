@@ -153,9 +153,37 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DailyAnalysisScreen(
-                              dayIndex: tappedIndex,
-                              dayLabel: selectedDay,
+                            builder: (_) => DailyAnalysisScreen(
+                              date: '2025-05-25',
+                              dayLabel: 'Sunday',
+                              dayIndex: 0,
+                              averageMood: 'Sad',
+                              mostCommonTag: 'relationship',
+                              rippleCount: 2,
+                              moodTimeline: [
+                                {
+                                  'time': '8:56 AM',
+                                  'emotion': 'Sad',
+                                  'tag': 'relationship'
+                                },
+                                {
+                                  'time': '5:40 PM',
+                                  'emotion': 'Neutral',
+                                  'tag': 'chores'
+                                },
+                              ],
+                              moodIntensityByTime: [
+                                {
+                                  'time': '8:56 AM',
+                                  'intensity': 45.0,
+                                  'emotion': 'Sad'
+                                },
+                                {
+                                  'time': '5:40 PM',
+                                  'intensity': 20.0,
+                                  'emotion': 'Neutral'
+                                },
+                              ],
                             ),
                           ),
                         );
