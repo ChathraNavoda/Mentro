@@ -43,6 +43,8 @@ dependencies:
   intl: ^0.20.2
   dropdown_button2: ^2.3.9
   shared_preferences: ^2.5.3
+  simple_ripple_animation: ^0.1.0
+ 
 
 dev_dependencies:
   flutter_test:

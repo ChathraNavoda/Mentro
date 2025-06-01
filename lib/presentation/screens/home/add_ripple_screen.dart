@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:simple_ripple_animation/simple_ripple_animation.dart';
 
 class AddRippleScreen extends StatefulWidget {
   const AddRippleScreen({super.key});
@@ -141,16 +142,82 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
                 style: GoogleFonts.outfit(
                     fontSize: 16, fontWeight: FontWeight.w500)),
             const SizedBox(height: 12),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+            //   children: _emotions.map((emotion) {
+            //     final isSelected = _selectedEmotion == emotion;
+            //     return GestureDetector(
+            //       onTap: () {
+            //         if (!_emotionLocked) {
+            //           setState(() {
+            //             _selectedEmotion = emotion;
+            //             _emotionLocked = true; // lock after selection
+            //           });
+            //         }
+            //       },
+            //       onDoubleTap: () {
+            //         if (_emotionLocked && _selectedEmotion == emotion) {
+            //           setState(() {
+            //             _selectedEmotion = null;
+            //             _emotionLocked = false; // unlock on double tap
+            //           });
+            //         }
+            //       },
+            //       child: Opacity(
+            //         opacity: !_emotionLocked || _selectedEmotion == emotion
+            //             ? 1.0
+            //             : 0.3,
+            //         child: Column(
+            //           children: [
+            //             Container(
+            //               decoration: BoxDecoration(
+            //                 shape: BoxShape.circle,
+            //                 border: Border.all(
+            //                   color: _selectedEmotion == emotion
+            //                       ? const Color(0xFF4ECDC4)
+            //                       : Colors.transparent,
+            //                   width: 5,
+            //                 ),
+            //                 boxShadow: _selectedEmotion == emotion
+            //                     ? [
+            //                         BoxShadow(
+            //                           color: const Color(0xFF4ECDC4)
+            //                               .withOpacity(0.6),
+            //                           blurRadius: 12,
+            //                           spreadRadius: 1,
+            //                         ),
+            //                       ]
+            //                     : [],
+            //               ),
+            //               padding: const EdgeInsets.all(4),
+            //               child: CircleAvatar(
+            //                 backgroundColor: Colors.white,
+            //                 radius: 22,
+            //                 backgroundImage: _getEmotionImage(emotion),
+            //               ),
+            //             ),
+            //             const SizedBox(height: 4),
+            //             Text(
+            //               emotion,
+            //               style: GoogleFonts.outfit(fontSize: 12),
+            //             ),
+            //           ],
+            //         ),
+            //       ),
+            //     );
+            //   }).toList(),
+            // ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: _emotions.map((emotion) {
                 final isSelected = _selectedEmotion == emotion;
+
                 return GestureDetector(
                   onTap: () {
                     if (!_emotionLocked) {
                       setState(() {
                         _selectedEmotion = emotion;
-                        _emotionLocked = true; // lock after selection
+                        _emotionLocked = true;
                       });
                     }
                   },
@@ -158,50 +225,34 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
                     if (_emotionLocked && _selectedEmotion == emotion) {
                       setState(() {
                         _selectedEmotion = null;
-                        _emotionLocked = false; // unlock on double tap
+                        _emotionLocked = false;
                       });
                     }
                   },
                   child: Opacity(
-                      opacity: !_emotionLocked || _selectedEmotion == emotion
-                          ? 1.0
-                          : 0.3,
-                      child: Column(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: _selectedEmotion == emotion
-                                    ? const Color(0xFF4ECDC4)
-                                    : Colors.transparent,
-                                width: 5,
-                              ),
-                              boxShadow: _selectedEmotion == emotion
-                                  ? [
-                                      BoxShadow(
-                                        color: const Color(0xFF4ECDC4)
-                                            .withOpacity(0.6),
-                                        blurRadius: 12,
-                                        spreadRadius: 1,
-                                      ),
-                                    ]
-                                  : [],
-                            ),
-                            padding: const EdgeInsets.all(4),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              radius: 22,
-                              backgroundImage: _getEmotionImage(emotion),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            emotion,
-                            style: GoogleFonts.outfit(fontSize: 12),
-                          ),
-                        ],
-                      )),
+                    opacity: !_emotionLocked || isSelected ? 1.0 : 0.3,
+                    child: Column(
+                      children: [
+                        isSelected
+                            ? RippleAnimation(
+                                color: _getRippleColor(
+                                    emotion), // <-- this line is the magic!
+                                delay: const Duration(milliseconds: 400),
+                                minRadius: 26,
+                                ripplesCount: 3,
+                                duration: const Duration(seconds: 6),
+                                repeat: true,
+                                child: _buildEmotionAvatar(emotion, isSelected),
+                              )
+                            : _buildEmotionAvatar(emotion, isSelected),
+                        const SizedBox(height: 4),
+                        Text(
+                          emotion,
+                          style: GoogleFonts.outfit(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -269,5 +320,45 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildEmotionAvatar(String emotion, bool isSelected) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: _getRippleColor(emotion).withOpacity(0.5),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                ),
+              ]
+            : [],
+      ),
+      padding: const EdgeInsets.all(4),
+      child: CircleAvatar(
+        backgroundColor: Colors.white,
+        radius: 22,
+        backgroundImage: _getEmotionImage(emotion),
+      ),
+    );
+  }
+
+  Color _getRippleColor(String emotion) {
+    switch (emotion) {
+      case 'Happy':
+        return Color(0xFFEDEEA5);
+      case 'Sad':
+        return Color(0xFFBA90D0);
+      case 'Angry':
+        return Color(0xFFEF7A87);
+      case 'Anxious':
+        return Color(0xFFB9AA9D);
+      case 'Neutral':
+        return Color(0xFF8ECFE6);
+      default:
+        return const Color(0xFF4ECDC4); // fallback color
+    }
   }
 }
