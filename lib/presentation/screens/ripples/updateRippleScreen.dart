@@ -59,7 +59,7 @@ class _UpdateRippleScreenState extends State<UpdateRippleScreen> {
           .collection('ripples')
           .doc(widget.rippleId)
           .update({
-        'date': Timestamp.fromDate(_selectedDate),
+        'date': Timestamp.now(), // This sets the current date and time
         'emotion': _selectedEmotion,
         'trigger': _triggerController.text.trim(),
         'description': _descriptionController.text.trim(),
