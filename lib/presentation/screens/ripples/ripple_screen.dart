@@ -70,7 +70,6 @@ class RippleScreen extends StatelessWidget {
                   trailing: PopupMenuButton<String>(
                     onSelected: (value) {
                       if (value == 'view') {
-                      } else if (value == 'edit') {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -79,17 +78,58 @@ class RippleScreen extends StatelessWidget {
                           ),
                         );
                       } else if (value == 'delete') {
-                        FirebaseFirestore.instance
-                            .collection('ripples')
-                            .doc(docId)
-                            .delete();
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text(
+                              'Delete Ripple',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            content: const Text(
+                              'Are you sure you want to delete this ripple? This action cannot be undone.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context), // Cancel
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(color: Color(0xFF4ECDC4)),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  // Delete ripple from Firestore
+                                  await FirebaseFirestore.instance
+                                      .collection('ripples')
+                                      .doc(docId)
+                                      .delete();
+
+                                  Navigator.pop(context); // Close the dialog
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Ripple deleted')),
+                                  );
+                                },
+                                child: const Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'view', child: Text('View')),
-                      const PopupMenuItem(value: 'edit', child: Text('Edit')),
                       const PopupMenuItem(
-                          value: 'delete', child: Text('Delete')),
+                        value: 'view',
+                        child: Text('Update'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete'),
+                      ),
                     ],
                   ),
                 ),
