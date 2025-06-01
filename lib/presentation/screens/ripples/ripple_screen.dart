@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
 
 class RippleScreen extends StatelessWidget {
   const RippleScreen({super.key});
@@ -69,9 +70,14 @@ class RippleScreen extends StatelessWidget {
                   trailing: PopupMenuButton<String>(
                     onSelected: (value) {
                       if (value == 'view') {
-                        // Navigate to view page
                       } else if (value == 'edit') {
-                        // Navigate to edit page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                UpdateRippleScreen(rippleId: docId),
+                          ),
+                        );
                       } else if (value == 'delete') {
                         FirebaseFirestore.instance
                             .collection('ripples')
