@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +16,7 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
   final _triggerController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _tagsController = TextEditingController();
+  bool _emotionLocked = false;
 
   final List<String> _emotions = [
     'Happy',
@@ -59,21 +61,41 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
     }
   }
 
-  void _saveRipple() {
-    final ripple = {
-      'date': _selectedDate,
-      'emotion': _selectedEmotion,
-      'trigger': _triggerController.text,
-      'description': _descriptionController.text,
-      'tags': _tagsController.text
-          .split('#')
-          .where((tag) => tag.trim().isNotEmpty)
-          .toList(),
-    };
+  void _saveRipple() async {
+    if (_selectedEmotion == null || _triggerController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Please select an emotion and enter a trigger.")),
+      );
+      return;
+    }
 
-    print("Ripple saved: $ripple");
-    // TODO: Save to database or backend
-    Navigator.pop(context); // Return to previous screen
+    try {
+      final rippleData = {
+        'date': Timestamp.fromDate(_selectedDate),
+        'time': Timestamp.now(), // You can use this for sorting later
+        'emotion': _selectedEmotion,
+        'trigger': _triggerController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'tags': _tagsController.text
+            .split('#')
+            .map((tag) => tag.trim())
+            .where((tag) => tag.isNotEmpty)
+            .toList(),
+      };
+
+      await FirebaseFirestore.instance.collection('ripples').add(rippleData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Ripple added successfully!")),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to add ripple: $e")),
+      );
+    }
   }
 
   @override
@@ -125,32 +147,61 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
                 final isSelected = _selectedEmotion == emotion;
                 return GestureDetector(
                   onTap: () {
-                    setState(() {
-                      _selectedEmotion = emotion;
-                    });
+                    if (!_emotionLocked) {
+                      setState(() {
+                        _selectedEmotion = emotion;
+                        _emotionLocked = true; // lock after selection
+                      });
+                    }
                   },
-                  child: Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color:
-                                isSelected ? Colors.teal : Colors.transparent,
-                            width: 2,
+                  onDoubleTap: () {
+                    if (_emotionLocked && _selectedEmotion == emotion) {
+                      setState(() {
+                        _selectedEmotion = null;
+                        _emotionLocked = false; // unlock on double tap
+                      });
+                    }
+                  },
+                  child: Opacity(
+                      opacity: !_emotionLocked || _selectedEmotion == emotion
+                          ? 1.0
+                          : 0.3,
+                      child: Column(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _selectedEmotion == emotion
+                                    ? const Color(0xFF4ECDC4)
+                                    : Colors.transparent,
+                                width: 5,
+                              ),
+                              boxShadow: _selectedEmotion == emotion
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFF4ECDC4)
+                                            .withOpacity(0.6),
+                                        blurRadius: 12,
+                                        spreadRadius: 1,
+                                      ),
+                                    ]
+                                  : [],
+                            ),
+                            padding: const EdgeInsets.all(4),
+                            child: CircleAvatar(
+                              backgroundColor: Colors.white,
+                              radius: 22,
+                              backgroundImage: _getEmotionImage(emotion),
+                            ),
                           ),
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: CircleAvatar(
-                          backgroundColor: Colors.transparent,
-                          radius: 22,
-                          backgroundImage: _getEmotionImage(emotion),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(emotion, style: GoogleFonts.outfit(fontSize: 12)),
-                    ],
-                  ),
+                          const SizedBox(height: 4),
+                          Text(
+                            emotion,
+                            style: GoogleFonts.outfit(fontSize: 12),
+                          ),
+                        ],
+                      )),
                 );
               }).toList(),
             ),
