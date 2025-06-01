@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mentro/presentation/screens/analytics/analytic_screen.dart';
 import 'package:mentro/presentation/screens/history/history_screen.dart';
 import 'package:mentro/presentation/screens/home/home_screen.dart';
+import 'package:mentro/presentation/screens/ripples/ripple_screen.dart';
 import 'package:mentro/presentation/screens/settings/settings_screen.dart';
 
 class CustomBottomNavbar extends StatefulWidget {
@@ -16,6 +17,7 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
 
   final List<Widget> pages = const [
     HomeScreen(),
+    RippleScreen(),
     MoodAnalyticsScreen(),
     HistoryScreen(),
     SettingsScreen(),
@@ -37,6 +39,8 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.waves_outlined), label: 'Ripples'),
           BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart_rounded), label: 'Analytics'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
