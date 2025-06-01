@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
+import 'package:mentro/presentation/screens/ripples/view_ripple_screen.dart';
 
 class RippleScreen extends StatelessWidget {
   const RippleScreen({super.key});
@@ -42,95 +43,105 @@ class RippleScreen extends StatelessWidget {
               final trigger = data['trigger'] ?? '';
               final docId = ripple.id;
 
-              return Card(
-                margin: const EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 4,
-                child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  leading: CircleAvatar(
-                    backgroundImage: AssetImage(
-                        'assets/images/${emotion.toLowerCase()}.png'),
-                    backgroundColor: Colors.white,
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewRippleScreen(rippleId: docId),
+                    ),
+                  );
+                },
+                child: Card(
+                  margin: const EdgeInsets.all(12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  title: Text(emotion,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(trigger),
-                      const SizedBox(height: 4),
-                      Text(DateFormat('MMMM dd, yyyy').format(date),
-                          style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'view') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                UpdateRippleScreen(rippleId: docId),
-                          ),
-                        );
-                      } else if (value == 'delete') {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text(
-                              'Delete Ripple',
-                              style: TextStyle(color: Colors.red),
+                  elevation: 4,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    leading: CircleAvatar(
+                      backgroundImage: AssetImage(
+                          'assets/images/${emotion.toLowerCase()}.png'),
+                      backgroundColor: Colors.white,
+                    ),
+                    title: Text(emotion,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(trigger),
+                        const SizedBox(height: 4),
+                        Text(DateFormat('MMMM dd, yyyy').format(date),
+                            style: const TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'view') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  UpdateRippleScreen(rippleId: docId),
                             ),
-                            content: const Text(
-                              'Are you sure you want to delete this ripple? This action cannot be undone.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context), // Cancel
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(color: Color(0xFF4ECDC4)),
-                                ),
+                          );
+                        } else if (value == 'delete') {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text(
+                                'Delete Ripple',
+                                style: TextStyle(color: Colors.red),
                               ),
-                              TextButton(
-                                onPressed: () async {
-                                  // Delete ripple from Firestore
-                                  await FirebaseFirestore.instance
-                                      .collection('ripples')
-                                      .doc(docId)
-                                      .delete();
+                              content: const Text(
+                                'Are you sure you want to delete this ripple? This action cannot be undone.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context), // Cancel
+                                  child: const Text(
+                                    'Cancel',
+                                    style: TextStyle(color: Color(0xFF4ECDC4)),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    // Delete ripple from Firestore
+                                    await FirebaseFirestore.instance
+                                        .collection('ripples')
+                                        .doc(docId)
+                                        .delete();
 
-                                  Navigator.pop(context); // Close the dialog
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Ripple deleted')),
-                                  );
-                                },
-                                child: const Text(
-                                  'Delete',
-                                  style: TextStyle(color: Colors.red),
+                                    Navigator.pop(context); // Close the dialog
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text('Ripple deleted')),
+                                    );
+                                  },
+                                  child: const Text(
+                                    'Delete',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'view',
-                        child: Text('Update'),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Delete'),
-                      ),
-                    ],
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'view',
+                          child: Text('Update'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
