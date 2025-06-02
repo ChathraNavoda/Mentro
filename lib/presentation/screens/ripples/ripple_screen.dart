@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mentro/presentation/screens/ripples/archive_ripples_screen.dart';
 import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
 import 'package:mentro/presentation/screens/ripples/view_ripple_screen.dart';
 
@@ -12,7 +13,21 @@ class RippleScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Your Ripples"),
-        backgroundColor: Color(0xFF4ECDC4),
+        backgroundColor: const Color(0xFF4ECDC4),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.archive),
+            tooltip: 'View Archived Ripples',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ArchivedRipplesScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

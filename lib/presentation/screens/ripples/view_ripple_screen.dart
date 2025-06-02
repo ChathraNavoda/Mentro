@@ -9,23 +9,6 @@ class ViewRippleScreen extends StatelessWidget {
 
   const ViewRippleScreen({super.key, required this.rippleId});
 
-  Future<void> _archiveRipple(BuildContext context) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('ripples')
-          .doc(rippleId)
-          .update({'isArchived': true});
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ripple archived successfully')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error archiving ripple: $e')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<DocumentSnapshot>(
@@ -62,6 +45,7 @@ class ViewRippleScreen extends StatelessWidget {
             emotionDetails['color'] ?? Colors.grey.withOpacity(0.3);
 
         return Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBar(
             title: const Text('Ripple Detail'),
             centerTitle: true,
@@ -152,7 +136,6 @@ class ViewRippleScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const Divider(height: 1),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
@@ -161,17 +144,62 @@ class ViewRippleScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _BottomIconButton(
-                      icon: Icons.edit_outlined,
+                      icon: Icons.edit_square,
                       label: 'Edit',
                       onPressed: () {
                         Navigator.pushNamed(context, '/update',
                             arguments: rippleId);
                       },
+                      iconColor: const Color(0xFF4ECDC4),
                     ),
                     _BottomIconButton(
                       icon: Icons.archive_outlined,
                       label: 'Archive',
-                      onPressed: () => _archiveRipple(context),
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Archive Ripple'),
+                            content: const Text(
+                                'Are you sure you want to archive this ripple?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Yes'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('ripples')
+                                .doc(rippleId)
+                                .update({'isArchived': true});
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text("Ripple archived successfully")),
+                            );
+
+                            Navigator.pop(
+                                context); // Optional: Go back after archiving
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text("Failed to archive ripple: $e")),
+                            );
+                          }
+                        }
+                      },
+                      iconColor: const Color(0xFF4ECDC4),
                     ),
                     _BottomIconButton(
                       icon: Icons.share_outlined,
@@ -179,6 +207,7 @@ class ViewRippleScreen extends StatelessWidget {
                       onPressed: () {
                         Share.share('$title\n\n$description');
                       },
+                      iconColor: const Color(0xFF4ECDC4),
                     ),
                   ],
                 ),
@@ -195,12 +224,13 @@ class _BottomIconButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
+  final Color? iconColor;
 
   const _BottomIconButton({
-    super.key,
     required this.icon,
     required this.label,
     required this.onPressed,
+    this.iconColor,
   });
 
   @override
@@ -208,7 +238,9 @@ class _BottomIconButton extends StatelessWidget {
     return Column(
       children: [
         IconButton(
-            onPressed: onPressed, icon: Icon(icon, color: Colors.black87)),
+          onPressed: onPressed,
+          icon: Icon(icon, color: iconColor ?? Colors.grey),
+        ),
         Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
