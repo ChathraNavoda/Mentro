@@ -1,12 +1,50 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:mentro/presentation/screens/ripples/archive_ripples_screen.dart';
 import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
 import 'package:mentro/presentation/screens/ripples/view_ripple_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RippleScreen extends StatelessWidget {
   const RippleScreen({super.key});
+
+  Future<void> _handleArchiveAccess(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final isProtected = prefs.getBool('isArchiveProtected') ?? false;
+
+    if (isProtected) {
+      final auth = LocalAuthentication();
+      final canAuth =
+          await auth.canCheckBiometrics || await auth.isDeviceSupported();
+
+      if (!canAuth) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Biometric authentication not available')),
+        );
+        return;
+      }
+
+      final didAuthenticate = await auth.authenticate(
+        localizedReason: 'Please authenticate to access archived ripples',
+        options: const AuthenticationOptions(biometricOnly: true),
+      );
+
+      if (!didAuthenticate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Authentication failed')),
+        );
+        return;
+      }
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ArchivedRipplesScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,21 +56,14 @@ class RippleScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.archive),
             tooltip: 'View Archived Ripples',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ArchivedRipplesScreen(),
-                ),
-              );
-            },
+            onPressed: () => _handleArchiveAccess(context),
           ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('ripples')
-            .orderBy('time', descending: true) // sort by time added
+            .orderBy('time', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -81,15 +112,19 @@ class RippleScreen extends StatelessWidget {
                           'assets/images/${emotion.toLowerCase()}.png'),
                       backgroundColor: Colors.white,
                     ),
-                    title: Text(emotion,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(
+                      emotion,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(trigger),
                         const SizedBox(height: 4),
-                        Text(DateFormat('MMMM dd, yyyy').format(date),
-                            style: const TextStyle(fontSize: 12)),
+                        Text(
+                          DateFormat('MMMM dd, yyyy').format(date),
+                          style: const TextStyle(fontSize: 12),
+                        ),
                       ],
                     ),
                     trailing: PopupMenuButton<String>(
@@ -106,40 +141,33 @@ class RippleScreen extends StatelessWidget {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text(
-                                'Delete Ripple',
-                                style: TextStyle(color: Colors.red),
-                              ),
+                              title: const Text('Delete Ripple',
+                                  style: TextStyle(color: Colors.red)),
                               content: const Text(
                                 'Are you sure you want to delete this ripple? This action cannot be undone.',
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context), // Cancel
-                                  child: const Text(
-                                    'Cancel',
-                                    style: TextStyle(color: Color(0xFF4ECDC4)),
-                                  ),
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel',
+                                      style:
+                                          TextStyle(color: Color(0xFF4ECDC4))),
                                 ),
                                 TextButton(
                                   onPressed: () async {
-                                    // Delete ripple from Firestore
                                     await FirebaseFirestore.instance
                                         .collection('ripples')
                                         .doc(docId)
                                         .delete();
 
-                                    Navigator.pop(context); // Close the dialog
+                                    Navigator.pop(context);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                           content: Text('Ripple deleted')),
                                     );
                                   },
-                                  child: const Text(
-                                    'Delete',
-                                    style: TextStyle(color: Colors.red),
-                                  ),
+                                  child: const Text('Delete',
+                                      style: TextStyle(color: Colors.red)),
                                 ),
                               ],
                             ),

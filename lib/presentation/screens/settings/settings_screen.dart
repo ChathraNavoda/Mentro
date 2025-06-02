@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/core/services/google_service.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,6 +15,28 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool isReminderOn = true;
   bool isDarkMode = false;
+  bool _isArchiveProtected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadArchiveProtection();
+  }
+
+  Future<void> _loadArchiveProtection() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isArchiveProtected = prefs.getBool('isArchiveProtected') ?? false;
+    });
+  }
+
+  Future<void> _setArchiveProtection(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isArchiveProtected', value);
+    setState(() {
+      _isArchiveProtected = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +81,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           const SizedBox(height: 20),
+
           // Mood Reminder
           SwitchListTile(
             value: isReminderOn,
@@ -82,6 +106,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             secondary: Icon(Icons.dark_mode),
           ),
 
+          // 🔒 Protect Archived Ripples
+          SwitchListTile(
+            value: _isArchiveProtected,
+            onChanged: (val) {
+              _setArchiveProtection(val);
+            },
+            title: const Text("🔒 Protect Archived Ripples"),
+            subtitle:
+                const Text("Require authentication to view archived entries"),
+            secondary: const Icon(Icons.lock),
+          ),
+
           const Divider(),
 
           // About Mentro
@@ -89,7 +125,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Icon(Icons.info_outline),
             title: Text("About Mentro"),
             onTap: () {
-              // Show a dialog or navigate to about page
               showAboutDialog(
                 context: context,
                 applicationName: "Mentro",
@@ -109,7 +144,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Icon(Icons.lock_outline),
             title: Text("Privacy Policy"),
             onTap: () {
-              // Open policy page or external link
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
@@ -131,7 +165,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Icon(Icons.mail_outline),
             title: Text("Contact Support"),
             onTap: () {
-              // Implement email launcher or contact form
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
