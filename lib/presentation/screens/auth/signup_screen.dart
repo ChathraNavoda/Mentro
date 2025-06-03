@@ -38,7 +38,10 @@ class _SignupScreenState extends State<SignupScreen> {
         isLoading = true;
       });
       Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomeScreen()));
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(),
+        ),
+      );
     } else {
       setState(() {
         isLoading = false;

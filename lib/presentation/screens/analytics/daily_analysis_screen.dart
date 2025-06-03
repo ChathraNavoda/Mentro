@@ -71,7 +71,14 @@ class DailyAnalysisScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('$dayLabel Analysis')),
+      appBar: AppBar(
+        title: Text('$dayLabel Analysis'),
+        backgroundColor: const Color(0xFF4ECDC4),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(

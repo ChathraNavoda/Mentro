@@ -630,6 +630,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:mentro/presentation/screens/analytics/daily_analysis_loader_screen.dart';
 
 class MoodAnalyticsScreen extends StatefulWidget {
   const MoodAnalyticsScreen({super.key});
@@ -684,10 +685,25 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
   }
 
   Future<void> fetchEmotionDataForDate(DateTime selectedDate) async {
-    final DateTime startOfDay =
-        DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
-    final DateTime endOfDay = startOfDay.add(const Duration(days: 1));
+    final startOfDay = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
 
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+// Query between start and end of the day
+    final snapshot = await FirebaseFirestore.instance
+        .collection('ripples') // replace with your actual collection name
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .where('date', isLessThan: Timestamp.fromDate(endOfDay))
+        .get();
+
+    final docs = snapshot.docs;
+
+    print('Querying for: $startOfDay to $endOfDay');
+    print('Docs returned: ${snapshot.docs.length}');
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('ripples')
@@ -714,6 +730,8 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
         isLoading = false;
       });
     }
+    print('Querying for: $startOfDay to $endOfDay');
+    print('Docs returned: ${snapshot.docs.length}');
   }
 
   Future<void> fetchWeeklyEmotionData(DateTime selectedDate) async {
@@ -962,6 +980,7 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isNavigating = false;
     return Scaffold(
       backgroundColor: const Color(0xFFFFFBF5),
       appBar: AppBar(
@@ -1087,8 +1106,46 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
                                       BarChartData(
                                         maxY:
                                             _calculateMaxY(weeklyEmotionCounts),
-                                        barTouchData:
-                                            BarTouchData(enabled: false),
+
+                                        ///
+                                        barTouchData: BarTouchData(
+                                          enabled: true,
+                                          touchCallback:
+                                              (event, response) async {
+                                            if (event
+                                                    .isInterestedForInteractions &&
+                                                response != null &&
+                                                !isNavigating) {
+                                              final index = response
+                                                  .spot?.touchedBarGroupIndex;
+                                              if (index != null) {
+                                                isNavigating = true;
+
+                                                final now = DateTime.now();
+                                                final weekStartDate =
+                                                    now.subtract(Duration(
+                                                        days: now.weekday % 7));
+                                                final targetDate = weekStartDate
+                                                    .add(Duration(days: index));
+
+                                                await Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        DailyAnalysisLoaderScreen(
+                                                            selectedDate:
+                                                                targetDate),
+                                                  ),
+                                                );
+
+                                                isNavigating =
+                                                    false; // reset after coming back
+                                              }
+                                            }
+                                          },
+                                        ),
+
+                                        ///
                                         titlesData: FlTitlesData(
                                           bottomTitles: AxisTitles(
                                             sideTitles: SideTitles(
