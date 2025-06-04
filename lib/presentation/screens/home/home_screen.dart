@@ -1,10 +1,63 @@
-import 'package:fl_chart/fl_chart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/presentation/screens/home/add_ripple_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late Future<int> _streakFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _streakFuture = getMoodStreak();
+  }
+
+  Future<int> getMoodStreak() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return 0;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('ripples')
+        .where('userId', isEqualTo: userId)
+        .where('isArchived', isEqualTo: false)
+        .orderBy('date', descending: true)
+        .get();
+
+    // Extract unique dates (only year/month/day)
+    List<DateTime> rippleDates = snapshot.docs
+        .map((doc) {
+          Timestamp timestamp = doc['date'];
+          final d = timestamp.toDate();
+          return DateTime(d.year, d.month, d.day);
+        })
+        .toSet()
+        .toList();
+
+    rippleDates.sort((a, b) => b.compareTo(a)); // Latest first
+
+    int streak = 0;
+    DateTime today = DateTime.now();
+    DateTime checkDate = DateTime(today.year, today.month, today.day);
+
+    for (int i = 0; i < rippleDates.length; i++) {
+      if (rippleDates[i].isAtSameMomentAs(checkDate)) {
+        streak++;
+        checkDate = checkDate.subtract(Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,15 +69,11 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo and Greeting
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 12),
-                  Image.asset(
-                    'assets/images/logo.png',
-                    scale: 1.2,
-                  ),
+                  Image.asset('assets/images/logo.png', scale: 1.2),
                   const SizedBox(height: 30),
                   Text(
                     "How are you feeling today?",
@@ -34,37 +83,28 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-
-              // Emotions Row with Images
               _buildEmotionPicker(),
               const SizedBox(height: 24),
-
-              // Add Ripple Button
               Center(
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AddRippleScreen(),
-                      ),
+                          builder: (context) => AddRippleScreen()),
                     );
                   },
-                  icon: const Icon(
-                    Icons.add_circle_outline,
-                    color: Color.fromARGB(255, 255, 255, 255),
-                  ),
+                  icon:
+                      const Icon(Icons.add_circle_outline, color: Colors.white),
                   label: Text(
                     "Add Emotion Ripple",
                     style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16,
+                        color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4ECDC4),
-                    foregroundColor: const Color.fromARGB(225, 255, 255, 255),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -74,82 +114,49 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 35),
-
-              // Mood This Week Title
-              Text(
-                "Mood This Week",
-                style: GoogleFonts.outfit(
-                    fontSize: 20, fontWeight: FontWeight.w400),
-              ),
-              const SizedBox(height: 16),
-
-              // Dummy Bar Chart (Static)
-              SizedBox(
-                height: 200,
-                child: BarChart(
-                  BarChartData(
-                    titlesData: FlTitlesData(
-                      leftTitles:
-                          AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles:
-                          AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles:
-                          AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-                            return Text(
-                              days[value.toInt() % 7],
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            );
-                          },
+              const SizedBox(height: 32),
+              FutureBuilder<int>(
+                future: _streakFuture,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  int streak = snapshot.data!;
+                  return Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    color: Colors.orange.shade100,
+                    child: InkWell(
+                      onTap: () {
+                        // Navigate to Streak Details Screen or show bottom sheet
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.local_fire_department,
+                                size: 40, color: Colors.orange),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text("🔥 Mood Streak",
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold)),
+                                Text("You're on a $streak-day streak!",
+                                    style: const TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.chevron_right),
+                          ],
                         ),
                       ),
                     ),
-                    borderData: FlBorderData(show: false),
-                    barGroups: List.generate(7, (index) {
-                      return BarChartGroupData(
-                        x: index,
-                        barRods: [
-                          BarChartRodData(
-                            toY: (index + 1) * 2.0,
-                            color: const Color(0xFF4ECDC4),
-                            width: 18,
-                            borderRadius: BorderRadius.circular(6),
-                          )
-                        ],
-                      );
-                    }),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Recent Entries Title
-              Text(
-                "Recent Entries",
-                style: GoogleFonts.outfit(
-                    fontSize: 20, fontWeight: FontWeight.w400),
-              ),
-              const SizedBox(height: 16),
-
-              // Dummy List of Recent Entries
-              _buildRecentEntry(
-                date: "Tuesday Apr 30",
-                emotion: "Anxious",
-                description: "Struggling with workload at job.",
-              ),
-              const SizedBox(height: 12),
-              _buildRecentEntry(
-                date: "Tuesday Apr 4",
-                emotion: "Angry",
-                description: "Incident with the roommate.",
+                  );
+                },
               ),
             ],
           ),
@@ -195,17 +202,17 @@ class HomeScreen extends StatelessWidget {
   ImageProvider _getEmotionImage(String emotion) {
     switch (emotion.toLowerCase()) {
       case 'happy':
-        return AssetImage('assets/images/happy.png');
+        return const AssetImage('assets/images/happy.png');
       case 'sad':
-        return AssetImage('assets/images/sad.png');
+        return const AssetImage('assets/images/sad.png');
       case 'angry':
-        return AssetImage('assets/images/angry.png');
+        return const AssetImage('assets/images/angry.png');
       case 'anxious':
-        return AssetImage('assets/images/anxious.png');
+        return const AssetImage('assets/images/anxious.png');
       case 'neutral':
-        return AssetImage('assets/images/neutral.png');
+        return const AssetImage('assets/images/neutral.png');
       default:
-        return AssetImage('assets/images/default.png');
+        return const AssetImage('assets/images/default.png');
     }
   }
 
@@ -218,13 +225,9 @@ class HomeScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(
-            255, 255, 255, 255), // light grey background (customize if needed)
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color.fromARGB(119, 0, 0, 0), // Light grey border
-          width: 1,
-        ),
+        border: Border.all(color: const Color.fromARGB(119, 0, 0, 0), width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

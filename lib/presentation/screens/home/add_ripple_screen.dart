@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -62,6 +63,42 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
     }
   }
 
+  // void _saveRipple() async {
+  //   if (_selectedEmotion == null || _triggerController.text.trim().isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //           content: Text("Please select an emotion and enter a trigger.")),
+  //     );
+  //     return;
+  //   }
+
+  //   try {
+  //     final rippleData = {
+  //       'date': Timestamp.fromDate(_selectedDate),
+  //       'time': Timestamp.now(), // You can use this for sorting later
+  //       'emotion': _selectedEmotion,
+  //       'trigger': _triggerController.text.trim(),
+  //       'description': _descriptionController.text.trim(),
+  //       'tags': _tagsController.text
+  //           .split('#')
+  //           .map((tag) => tag.trim())
+  //           .where((tag) => tag.isNotEmpty)
+  //           .toList(),
+  //     };
+
+  //     await FirebaseFirestore.instance.collection('ripples').add(rippleData);
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Ripple added successfully!")),
+  //     );
+
+  //     Navigator.pop(context);
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Failed to add ripple: $e")),
+  //     );
+  //   }
+  // }
   void _saveRipple() async {
     if (_selectedEmotion == null || _triggerController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,10 +108,19 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
       return;
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User not logged in.")),
+      );
+      return;
+    }
+
     try {
       final rippleData = {
+        'userId': user.uid, // 🔥 Required for streak logic
         'date': Timestamp.fromDate(_selectedDate),
-        'time': Timestamp.now(), // You can use this for sorting later
+        'time': Timestamp.now(),
         'emotion': _selectedEmotion,
         'trigger': _triggerController.text.trim(),
         'description': _descriptionController.text.trim(),
@@ -83,6 +129,7 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
             .map((tag) => tag.trim())
             .where((tag) => tag.isNotEmpty)
             .toList(),
+        'isArchived': false, // Optional: Add default value if needed
       };
 
       await FirebaseFirestore.instance.collection('ripples').add(rippleData);
