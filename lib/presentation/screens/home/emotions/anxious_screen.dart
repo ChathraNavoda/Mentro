@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -174,7 +175,19 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
   final _player = AudioPlayer();
   bool _isPlaying = false;
   bool _completed = false;
-  int _secondsLeft = 60;
+  int _secondsLeft = 80;
+
+  final List<String> _trackUrls = [
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track1.mp3',
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track2.mp3',
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track3.mp3',
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track4.mp3',
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track5.mp3',
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track6.mp3',
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track7.mp3',
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track8.mp3',
+    'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/track9.mp3',
+  ];
 
   @override
   void dispose() {
@@ -187,12 +200,20 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
 
     setState(() {
       _isPlaying = true;
-      _secondsLeft = 60;
+      _secondsLeft = 80;
       _completed = false;
     });
+    // Pick a random track
+    final random = Random();
+    final selectedUrl = _trackUrls[random.nextInt(_trackUrls.length)];
 
-    await _player.setAsset('assets/sounds/memories.mp3');
-    _player.play();
+    try {
+      await _player.setUrl(selectedUrl);
+      _player.play();
+    } catch (e) {
+      print('Error loading track: $e');
+      return;
+    }
 
     // Timer countdown
     Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -228,11 +249,15 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
         ),
         const SizedBox(height: 20),
         Text(
+          _completed ? 'Meditation Complete!' : 'Seconds Left: $_secondsLeft',
+          style: const TextStyle(fontSize: 24),
+        ),
+        const SizedBox(height: 20),
+        Text(
           _completed
-              ? '🎉 You completed your mindfulness session!'
-              : 'Affirmation: "I am calm, I am in control."',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 18),
+              ? 'Meditation Complete!'
+              : 'Close your eyes and listen to the music! 💆',
+          style: const TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 20),
         Text(
