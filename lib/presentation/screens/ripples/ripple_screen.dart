@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
@@ -8,7 +9,8 @@ import 'package:mentro/presentation/screens/ripples/view_ripple_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RippleScreen extends StatelessWidget {
-  const RippleScreen({super.key});
+  final String userId;
+  const RippleScreen({super.key, required this.userId});
 
   Future<void> _handleArchiveAccess(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
@@ -62,7 +64,10 @@ class RippleScreen extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
             .collection('ripples')
+            .where('isArchived', isEqualTo: false)
             .orderBy('time', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -155,16 +160,32 @@ class RippleScreen extends StatelessWidget {
                                 ),
                                 TextButton(
                                   onPressed: () async {
-                                    await FirebaseFirestore.instance
-                                        .collection('ripples')
-                                        .doc(docId)
-                                        .delete();
+                                    final userId =
+                                        FirebaseAuth.instance.currentUser?.uid;
+                                    if (userId == null) return;
 
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text('Ripple deleted')),
-                                    );
+                                    try {
+                                      await FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(userId)
+                                          .collection('ripples')
+                                          .doc(docId)
+                                          .delete();
+
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text('Ripple deleted')),
+                                      );
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Error deleting ripple: $e')),
+                                      );
+                                    }
                                   },
                                   child: const Text('Delete',
                                       style: TextStyle(color: Colors.red)),

@@ -49,7 +49,6 @@ class DailyAnalysisScreen extends StatelessWidget {
     return moodIntensityByTime.asMap().entries.map((entry) {
       final index = entry.key;
       final timeEntry = entry.value;
-      final time = timeEntry['time'] as String;
       final emotion = timeEntry['emotion'] as String;
       final intensity = timeEntry['intensity'] as double;
       final color = emotionColors[emotion.toLowerCase()] ?? Colors.grey;

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mentro/presentation/screens/analytics/analytic_screen.dart';
 import 'package:mentro/presentation/screens/history/history_screen.dart';
@@ -14,14 +15,24 @@ class CustomBottomNavbar extends StatefulWidget {
 
 class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
   int currentIndex = 0;
+  List<Widget> pages = [];
 
-  final List<Widget> pages = const [
-    HomeScreen(),
-    RippleScreen(),
-    MoodAnalyticsScreen(),
-    HistoryScreen(),
-    SettingsScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      pages = [
+        const HomeScreen(),
+        RippleScreen(userId: user.uid),
+        MoodAnalyticsScreen(userId: user.uid),
+        const HistoryScreen(),
+        const SettingsScreen(),
+      ];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

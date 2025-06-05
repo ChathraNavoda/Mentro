@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -54,12 +55,22 @@ class _UpdateRippleScreenState extends State<UpdateRippleScreen> {
       return;
     }
 
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User not logged in.")),
+      );
+      return;
+    }
+
     try {
       await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
           .collection('ripples')
           .doc(widget.rippleId)
           .update({
-        'date': Timestamp.now(), // This sets the current date and time
+        'date': Timestamp.fromDate(_selectedDate), // Use the picked date
         'emotion': _selectedEmotion,
         'trigger': _triggerController.text.trim(),
         'description': _descriptionController.text.trim(),
@@ -97,8 +108,17 @@ class _UpdateRippleScreenState extends State<UpdateRippleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      return const Scaffold(
+        body: Center(child: Text("User not logged in.")),
+      );
+    }
+
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
           .collection('ripples')
           .doc(widget.rippleId)
           .snapshots(),

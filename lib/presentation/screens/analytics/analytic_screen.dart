@@ -626,6 +626,7 @@
 // }
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -633,8 +634,14 @@ import 'package:intl/intl.dart';
 import 'package:mentro/presentation/screens/analytics/daily_analysis_loader_screen.dart';
 
 class MoodAnalyticsScreen extends StatefulWidget {
-  const MoodAnalyticsScreen({super.key});
+  final String userId;
+  // final String rippleId;
 
+  const MoodAnalyticsScreen({
+    super.key,
+    required this.userId,
+    //required this.rippleId,
+  });
   @override
   State<MoodAnalyticsScreen> createState() => _MoodAnalyticsScreenState();
 }
@@ -656,14 +663,19 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
+
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
         isLoading = true;
         isWeeklyLoading = true;
       });
-      await fetchEmotionDataForDate(picked);
-      await fetchWeeklyEmotionData(picked);
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await fetchEmotionDataForDate(picked, user.uid);
+        await fetchWeeklyEmotionData(picked, user.uid);
+      }
     }
   }
 
@@ -680,32 +692,24 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
   @override
   void initState() {
     super.initState();
-    fetchEmotionDataForDate(selectedDate);
-    fetchWeeklyEmotionData(selectedDate);
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      fetchEmotionDataForDate(selectedDate, user.uid);
+      fetchWeeklyEmotionData(selectedDate, user.uid);
+    }
   }
 
-  Future<void> fetchEmotionDataForDate(DateTime selectedDate) async {
-    final startOfDay = DateTime(
-      selectedDate.year,
-      selectedDate.month,
-      selectedDate.day,
-    );
-
+  Future<void> fetchEmotionDataForDate(
+      DateTime selectedDate, String userId) async {
+    final startOfDay =
+        DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-// Query between start and end of the day
-    final snapshot = await FirebaseFirestore.instance
-        .collection('ripples') // replace with your actual collection name
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('date', isLessThan: Timestamp.fromDate(endOfDay))
-        .get();
-
-    final docs = snapshot.docs;
-
-    print('Querying for: $startOfDay to $endOfDay');
-    print('Docs returned: ${snapshot.docs.length}');
     try {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
           .collection('ripples')
           .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
           .where('date', isLessThan: Timestamp.fromDate(endOfDay))
@@ -724,28 +728,21 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
         totalEmotions = total;
         isLoading = false;
       });
+
+      print(
+          'Fetched ${snapshot.docs.length} docs from $startOfDay to $endOfDay');
     } catch (e) {
       print('Error fetching data: $e');
       setState(() {
         isLoading = false;
       });
     }
-    print('Querying for: $startOfDay to $endOfDay');
-    print('Docs returned: ${snapshot.docs.length}');
   }
 
-  Future<void> fetchWeeklyEmotionData(DateTime selectedDate) async {
-    // Fix: Start the week on Sunday
-    // DateTime.weekday returns Monday=1 ... Sunday=7
-    // To get Sunday, subtract weekday days and add 7 if needed
-    int daysToSunday = selectedDate.weekday % 7; // Sunday = 0 days back
-
-    DateTime sunday = DateTime(
-      selectedDate.year,
-      selectedDate.month,
-      selectedDate.day,
-    ).subtract(Duration(days: daysToSunday));
-
+  Future<void> fetchWeeklyEmotionData(
+      DateTime selectedDate, String userId) async {
+    int daysToSunday = selectedDate.weekday % 7;
+    DateTime sunday = selectedDate.subtract(Duration(days: daysToSunday));
     Map<String, Map<String, int>> weekData = {};
 
     try {
@@ -754,7 +751,9 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
         DateTime start = DateTime(day.year, day.month, day.day);
         DateTime end = start.add(const Duration(days: 1));
 
-        QuerySnapshot snapshot = await FirebaseFirestore.instance
+        final snapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
             .collection('ripples')
             .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
             .where('date', isLessThan: Timestamp.fromDate(end))
@@ -766,8 +765,8 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
           counts[emotion] = (counts[emotion] ?? 0) + 1;
         }
 
-        // Key by short weekday like 'Sun', 'Mon' for consistency
-        weekData[DateFormat('E').format(day)] = counts;
+        String weekday = DateFormat('E').format(day); // e.g., "Mon"
+        weekData[weekday] = counts;
       }
 
       setState(() {

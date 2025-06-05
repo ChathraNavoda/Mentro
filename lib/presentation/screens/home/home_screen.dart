@@ -12,51 +12,119 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<int> _streakFuture;
-
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String averageMood = '';
   @override
   void initState() {
     super.initState();
-    _streakFuture = getMoodStreak();
+    loadDailyData();
   }
 
-  Future<int> getMoodStreak() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return 0;
+  Future<void> loadDailyData() async {
+    final String userId = FirebaseAuth.instance.currentUser!.uid;
 
-    final snapshot = await FirebaseFirestore.instance
-        .collection('ripples')
-        .where('userId', isEqualTo: userId)
-        .where('isArchived', isEqualTo: false)
-        .orderBy('date', descending: true)
-        .get();
+    final DateTime start = DateTime.now();
+    final DateTime todayStart = DateTime(start.year, start.month, start.day);
+    final DateTime tomorrowStart = todayStart.add(const Duration(days: 1));
 
-    // Extract unique dates (only year/month/day)
-    List<DateTime> rippleDates = snapshot.docs
-        .map((doc) {
-          Timestamp timestamp = doc['date'];
-          final d = timestamp.toDate();
-          return DateTime(d.year, d.month, d.day);
-        })
-        .toSet()
-        .toList();
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('ripples')
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
+          .where('date', isLessThan: Timestamp.fromDate(tomorrowStart))
+          .get();
 
-    rippleDates.sort((a, b) => b.compareTo(a)); // Latest first
+      final docs = snapshot.docs;
 
-    int streak = 0;
-    DateTime today = DateTime.now();
-    DateTime checkDate = DateTime(today.year, today.month, today.day);
+      if (docs.isEmpty) {
+        if (mounted) {
+          setState(() {
+            averageMood = 'No data';
+          });
+        }
+        return;
+      }
 
-    for (int i = 0; i < rippleDates.length; i++) {
-      if (rippleDates[i].isAtSameMomentAs(checkDate)) {
-        streak++;
-        checkDate = checkDate.subtract(Duration(days: 1));
-      } else {
-        break;
+      Map<String, int> emotionCount = {};
+
+      for (var doc in docs) {
+        final data = doc.data();
+        final emotion = data['emotion'] ?? 'neutral';
+        emotionCount[emotion] = (emotionCount[emotion] ?? 0) + 1;
+      }
+
+      setState(() {
+        averageMood = emotionCount.entries
+            .reduce((a, b) => a.value > b.value ? a : b)
+            .key;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load mood data: $e')),
+        );
       }
     }
+  }
 
-    return streak;
+  Widget buildMoodImage(String mood, {double size = 48}) {
+    if (mood.isEmpty) {
+      return Icon(Icons.sentiment_dissatisfied, size: size);
+    }
+    return Image.asset(
+      'assets/images/${mood.toLowerCase()}.png',
+      height: size,
+      width: size,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) =>
+          Icon(Icons.broken_image, size: size),
+    );
+  }
+
+  Widget buildMoodSuggestion(String mood) {
+    final suggestions = {
+      'happy':
+          "You're glowing! Keep the joy flowing – maybe share a ripple of kindness!",
+      'sad':
+          "It’s okay to feel sad. Try journaling or listening to your favorite music.",
+      'angry':
+          "Take a few deep breaths. A quick walk might help you cool down.",
+      'anxious':
+          "Pause for a second. A guided meditation or pet video might help.",
+      'neutral':
+          "Feeling meh? Let’s shake things up – maybe try something spontaneous!",
+    };
+
+    final suggestion = suggestions[mood.toLowerCase()] ?? '';
+
+    if (suggestion.isEmpty) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Card(
+        color: const Color(0xFFFAF9F6),
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.lightbulb, color: Color(0xFF4ECDC4)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  suggestion,
+                  style: GoogleFonts.outfit(fontSize: 15),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -83,7 +151,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              _buildEmotionPicker(),
+              _buildEmotionPicker(), buildMoodSuggestion(averageMood),
+
               const SizedBox(height: 24),
               Center(
                 child: ElevatedButton.icon(
@@ -114,50 +183,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 35),
-              const SizedBox(height: 32),
-              FutureBuilder<int>(
-                future: _streakFuture,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  int streak = snapshot.data!;
-                  return Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    color: Colors.orange.shade100,
-                    child: InkWell(
-                      onTap: () {
-                        // Navigate to Streak Details Screen or show bottom sheet
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.local_fire_department,
-                                size: 40, color: Colors.orange),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("🔥 Mood Streak",
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold)),
-                                Text("You're on a $streak-day streak!",
-                                    style: const TextStyle(fontSize: 14)),
-                              ],
-                            ),
-                            const Spacer(),
-                            const Icon(Icons.chevron_right),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              Text('Average Mood for Today',
+                  style: Theme.of(context).textTheme.titleMedium),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  buildMoodImage(averageMood),
+                  const SizedBox(width: 25),
+                  Text(averageMood,
+                      style: Theme.of(context).textTheme.titleMedium),
+                ],
               ),
+              buildMoodSuggestion(averageMood), // 👈 Add this
             ],
           ),
         ),
@@ -196,72 +233,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         );
       }).toList(),
-    );
-  }
-
-  ImageProvider _getEmotionImage(String emotion) {
-    switch (emotion.toLowerCase()) {
-      case 'happy':
-        return const AssetImage('assets/images/happy.png');
-      case 'sad':
-        return const AssetImage('assets/images/sad.png');
-      case 'angry':
-        return const AssetImage('assets/images/angry.png');
-      case 'anxious':
-        return const AssetImage('assets/images/anxious.png');
-      case 'neutral':
-        return const AssetImage('assets/images/neutral.png');
-      default:
-        return const AssetImage('assets/images/default.png');
-    }
-  }
-
-  Widget _buildRecentEntry({
-    required String date,
-    required String emotion,
-    required String description,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color.fromARGB(119, 0, 0, 0), width: 1),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.transparent,
-            radius: 14,
-            backgroundImage: _getEmotionImage(emotion),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "$emotion - $date",
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w300,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

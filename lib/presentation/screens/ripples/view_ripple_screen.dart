@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -11,9 +12,21 @@ class ViewRippleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      return const Scaffold(
+        body: Center(child: Text('User not authenticated')),
+      );
+    }
+
     return FutureBuilder<DocumentSnapshot>(
-      future:
-          FirebaseFirestore.instance.collection('ripples').doc(rippleId).get(),
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('ripples')
+          .doc(rippleId)
+          .get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -84,16 +97,12 @@ class ViewRippleScreen extends StatelessWidget {
                       Text(
                         formattedDate,
                         style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
-                        ),
+                            fontSize: 16, color: Colors.black54),
                       ),
                       Text(
                         formattedTime,
                         style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
-                        ),
+                            fontSize: 16, color: Colors.black54),
                       ),
                       const SizedBox(height: 24),
                       Align(
@@ -178,6 +187,8 @@ class ViewRippleScreen extends StatelessWidget {
                         if (confirm == true) {
                           try {
                             await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(userId)
                                 .collection('ripples')
                                 .doc(rippleId)
                                 .update({'isArchived': true});
@@ -188,8 +199,7 @@ class ViewRippleScreen extends StatelessWidget {
                                       Text("Ripple archived successfully")),
                             );
 
-                            Navigator.pop(
-                                context); // Optional: Go back after archiving
+                            Navigator.pop(context);
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

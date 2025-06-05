@@ -14,28 +14,38 @@ class _ArchivedRipplesScreenState extends State<ArchivedRipplesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("Current user: ${user?.uid}");
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text("You must be logged in to view this page.")),
+      );
+    }
+
+    final ripplesRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .collection('ripples');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Archived Ripples"),
         backgroundColor: const Color(0xFF4ECDC4),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('ripples')
-            .where('isArchived', isEqualTo: true) // 👈 fixed field
+        stream: ripplesRef
+            .where('isArchived', isEqualTo: true)
             .orderBy('date', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          print("Snapshot connectionState: ${snapshot.connectionState}");
-          print("Snapshot has data: ${snapshot.hasData}");
-          print("Snapshot error: ${snapshot.error}");
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final archivedDocs = snapshot.data!.docs;
-          print("Archived documents count: ${archivedDocs.length}");
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          final archivedDocs = snapshot.data?.docs ?? [];
+
           if (archivedDocs.isEmpty) {
             return const Center(child: Text("No archived ripples found."));
           }
@@ -46,13 +56,15 @@ class _ArchivedRipplesScreenState extends State<ArchivedRipplesScreen> {
               final doc = archivedDocs[index];
               final data = doc.data() as Map<String, dynamic>;
 
+              final emotion = data['emotion'] ?? 'Neutral';
+              final imagePath = 'assets/images/${emotion.toLowerCase()}.png';
+
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundImage: AssetImage(
-                    'assets/images/${(data['emotion'] as String).toLowerCase()}.png',
-                  ),
+                  backgroundImage: AssetImage(imagePath),
+                  backgroundColor: Colors.transparent,
                 ),
-                title: Text(data['emotion'] ?? ''),
+                title: Text(emotion),
                 subtitle: Text(
                   data['trigger'] ?? '',
                   maxLines: 1,
@@ -62,13 +74,13 @@ class _ArchivedRipplesScreenState extends State<ArchivedRipplesScreen> {
                   icon: const Icon(Icons.unarchive),
                   onPressed: () async {
                     try {
-                      await FirebaseFirestore.instance
-                          .collection('ripples')
-                          .doc(doc.id)
-                          .update({'isArchived': false}); // 👈 unarchive
+                      await ripplesRef.doc(doc.id).update({
+                        'isArchived': false,
+                      });
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Ripple unarchived")),
+                        const SnackBar(
+                            content: Text("Ripple unarchived successfully")),
                       );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(

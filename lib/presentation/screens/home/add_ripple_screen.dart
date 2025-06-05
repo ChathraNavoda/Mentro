@@ -118,7 +118,6 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
 
     try {
       final rippleData = {
-        'userId': user.uid, // 🔥 Required for streak logic
         'date': Timestamp.fromDate(_selectedDate),
         'time': Timestamp.now(),
         'emotion': _selectedEmotion,
@@ -129,10 +128,14 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
             .map((tag) => tag.trim())
             .where((tag) => tag.isNotEmpty)
             .toList(),
-        'isArchived': false, // Optional: Add default value if needed
+        'isArchived': false,
       };
 
-      await FirebaseFirestore.instance.collection('ripples').add(rippleData);
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('ripples')
+          .add(rippleData);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Ripple added successfully!")),

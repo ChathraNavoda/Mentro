@@ -132,6 +132,7 @@
 // }
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -178,8 +179,12 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
         widget.selectedDate.day);
     final end = start.add(const Duration(days: 1));
 
+    final String userId = FirebaseAuth.instance.currentUser!.uid;
+
     try {
       final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
           .collection('ripples')
           .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
           .where('date', isLessThan: Timestamp.fromDate(end))
@@ -192,7 +197,7 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No data found for this day.')),
           );
-          Navigator.pop(context); // Pop *after* showing snack bar
+          Navigator.pop(context);
         }
         return;
       }
@@ -309,7 +314,7 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
                       children: [
                         buildMoodImage(averageMood),
                         const SizedBox(width: 12),
-                        Text('Average Mood: $averageMood',
+                        Text('Average Moodoooo: $averageMood',
                             style: Theme.of(context).textTheme.titleMedium),
                       ],
                     ),

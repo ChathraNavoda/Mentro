@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
@@ -42,6 +43,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
     return Scaffold(
       appBar: AppBar(
         title: const Text("Ripple History"),
@@ -73,6 +75,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
             .collection('ripples')
             .orderBy('date', descending: sortDescending)
             .snapshots(),
@@ -89,7 +93,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
             final data = doc.data() as Map<String, dynamic>;
             final isArchived = data['isArchived'] ?? false;
 
-            // ✨ Filter based on archive and emotion
             if (isArchived != showArchived) return false;
             if (selectedEmotion != 'All' &&
                 data['emotion'] != selectedEmotion) {
@@ -116,7 +119,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
               final emotion = data['emotion'] ?? 'Unknown';
               final trigger = data['trigger'] ?? '';
-
               final isArchived = data['isArchived'] ?? false;
               final date = (data['date'] as Timestamp).toDate();
               final docId = ripple.id;
