@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/presentation/screens/home/add_ripple_screen.dart';
+import 'package:mentro/presentation/screens/home/emotions/anxious_screen.dart';
+import 'package:mentro/presentation/screens/home/emotions/happy_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -103,24 +105,50 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 20),
-      child: Card(
-        color: const Color(0xFFFAF9F6),
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.lightbulb, color: Color(0xFF4ECDC4)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  suggestion,
-                  style: GoogleFonts.outfit(fontSize: 15),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          // Conditional navigation based on averageMood
+          final moodLower = mood.toLowerCase();
+          if (moodLower == 'anxious') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AnxiousScreen()),
+            );
+          } else if (moodLower == 'happy') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HappyScreen()),
+            );
+          } else {
+            // You can add more conditions here for other moods
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('No screen for mood: $mood')),
+            );
+          }
+        },
+        child: Card(
+          color: const Color(0xFFFAF9F6),
+          elevation: 2,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.lightbulb, color: Color(0xFF4ECDC4)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    suggestion,
+                    style: GoogleFonts.outfit(fontSize: 15),
+                  ),
                 ),
-              ),
-            ],
+                const Icon(Icons.arrow_forward_ios,
+                    size: 16, color: Color(0xFF4ECDC4)),
+              ],
+            ),
           ),
         ),
       ),
@@ -151,8 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              _buildEmotionPicker(), buildMoodSuggestion(averageMood),
-
+              _buildEmotionPicker(),
               const SizedBox(height: 24),
               Center(
                 child: ElevatedButton.icon(
@@ -214,23 +241,42 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: emotions.map((emotion) {
-        return Column(
-          children: [
-            Container(
-              height: 50,
-              width: 50,
-              padding: const EdgeInsets.all(6),
-              child: Image.asset(
-                emotion['image'],
-                fit: BoxFit.contain,
+        return GestureDetector(
+          onTap: () {
+            // Navigate to emotion screen based on emotion['name']
+            if (emotion['name'].toLowerCase() == 'anxious') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => AnxiousScreen()),
+              );
+            }
+            // Add other emotion screens similarly here
+            else if (emotion['name'].toLowerCase() == 'happy') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => HappyScreen()),
+              );
+            }
+            // Add SadScreen, AngryScreen, NeutralScreen etc
+          },
+          child: Column(
+            children: [
+              Container(
+                height: 50,
+                width: 50,
+                padding: const EdgeInsets.all(6),
+                child: Image.asset(
+                  emotion['image'],
+                  fit: BoxFit.contain,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              emotion['name'],
-              style: const TextStyle(fontSize: 12),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                emotion['name'],
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
         );
       }).toList(),
     );

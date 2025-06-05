@@ -46,6 +46,10 @@ dependencies:
   simple_ripple_animation: ^0.1.0
   share_plus: ^11.0.0
   local_auth: ^2.3.0
+  just_audio: ^0.10.3
+  lottie: ^3.3.1
+  firebase_storage: ^12.4.6
+  
  
 
 dev_dependencies:
@@ -73,6 +77,9 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/sounds/
+    - assets/lottie/
+  
   
 
   # An image asset can refer to one or more resolution-specific "variants", see
