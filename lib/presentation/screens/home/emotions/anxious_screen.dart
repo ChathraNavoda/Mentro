@@ -24,14 +24,6 @@ class _AnxiousScreenState extends State<AnxiousScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return;
-
-      setState(() {
-        _completedTasks.add(_tabController.index);
-      });
-    });
   }
 
   Widget buildMeditationTab() {
@@ -47,12 +39,14 @@ class _AnxiousScreenState extends State<AnxiousScreen>
   }
 
   Widget buildBreathingTab() {
-    return Center(
-      child: Text(
-        "🌬️ Breathe in... Hold... Breathe out...\n(Use an animation here!)",
-        textAlign: TextAlign.center,
-        style: GoogleFonts.outfit(fontSize: 18),
-      ),
+    return BreathingTab(
+      onBreathingComplete: () {
+        if (!_completedTasks.contains(1)) {
+          setState(() {
+            _completedTasks.add(1); // mark breathing as complete
+          });
+        }
+      },
     );
   }
 
@@ -115,7 +109,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
                     IconButton(
                       icon: Icon(
                         _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                        color: Colors.purple,
+                        color: Colors.black,
                       ),
                       onPressed: () {
                         setState(() {
@@ -127,7 +121,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
                     IconButton(
                       icon: Icon(
                         _isSoundOn ? Icons.volume_up : Icons.volume_off,
-                        color: Colors.teal,
+                        color: Colors.black,
                       ),
                       onPressed: () {
                         setState(() {
@@ -273,6 +267,127 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24))),
           child: Text(_completed ? 'Completed' : 'Start Meditation'),
+        ),
+      ],
+    );
+  }
+}
+
+//breath
+
+class BreathingTab extends StatefulWidget {
+  final VoidCallback onBreathingComplete;
+
+  const BreathingTab({super.key, required this.onBreathingComplete});
+
+  @override
+  State<BreathingTab> createState() => _BreathingTabState();
+}
+
+class _BreathingTabState extends State<BreathingTab>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Timer _timer;
+  int _secondsLeft = 60;
+  int _currentIndex = 0;
+  bool _isPlaying = false;
+  bool _completed = false;
+
+  final List<String> _breathingText = [
+    "🌬️ Breathe in...",
+    "😮‍💨 Hold...",
+    "😌 Breathe out..."
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    );
+  }
+
+  void startBreathing() {
+    if (_isPlaying) return;
+
+    setState(() {
+      _isPlaying = true;
+      _completed = false;
+      _secondsLeft = 60;
+      _currentIndex = 0;
+    });
+
+    _controller.repeat(reverse: true);
+
+    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!mounted) return;
+
+      setState(() {
+        _currentIndex = (_currentIndex + 1) % _breathingText.length;
+        _secondsLeft -= 4;
+      });
+
+      if (_secondsLeft <= 0) {
+        timer.cancel();
+        _controller.stop();
+        setState(() {
+          _isPlaying = false;
+          _completed = true;
+        });
+        widget.onBreathingComplete(); // ✅ trigger progress
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (_isPlaying || _completed)
+          ScaleTransition(
+            scale: Tween(begin: 1.0, end: 1.5).animate(CurvedAnimation(
+              parent: _controller,
+              curve: Curves.easeInOut,
+            )),
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Color(0xFF4ECDC4),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        const SizedBox(height: 30),
+        Text(
+          _completed ? 'Breathing Complete!' : _breathingText[_currentIndex],
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Time Left: $_secondsLeft sec',
+          style: const TextStyle(fontSize: 16),
+        ),
+        const SizedBox(height: 30),
+        ElevatedButton(
+          onPressed: _isPlaying ? null : startBreathing,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4ECDC4),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+          child: Text(_completed ? 'Completed' : 'Start Breathing'),
         ),
       ],
     );
