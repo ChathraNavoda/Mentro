@@ -30,6 +30,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     _tabController = TabController(length: 3, vsync: this);
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 10));
+    checkCompletionState();
   }
 
   @override
@@ -46,16 +47,45 @@ class _AnxiousScreenState extends State<AnxiousScreen>
           setState(() {
             _completedTasks.add(0); // mark meditation as complete
           });
+          saveCompletionState();
         }
       },
     );
+  }
+
+  void checkCompletionState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedTasks = prefs.getStringList('completed_tasks');
+    final timeString = prefs.getString('completion_time');
+
+    if (savedTasks != null && timeString != null) {
+      final savedTime = DateTime.parse(timeString);
+      final now = DateTime.now();
+
+      if (now.difference(savedTime).inHours < 24) {
+        setState(() {
+          _completedTasks.clear();
+          _completedTasks.addAll(savedTasks.map(int.parse));
+          _wasAllCompletedBefore = _completedTasks.length == 3;
+        });
+      } else {
+        await prefs.remove('completed_tasks');
+        await prefs.remove('completion_time');
+        setState(() {
+          _completedTasks.clear();
+          _wasAllCompletedBefore = false;
+        });
+      }
+    }
   }
 
   void saveCompletionState() async {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now().toIso8601String();
 
-    await prefs.setBool('tasks_completed', true);
+    await prefs.setStringList(
+        'completed_tasks', _completedTasks.map((e) => e.toString()).toList());
+
     await prefs.setString('completion_time', now);
   }
 
@@ -66,6 +96,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
           setState(() {
             _completedTasks.add(1); // mark breathing as complete
           });
+          saveCompletionState();
         }
       },
     );
@@ -78,6 +109,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
           setState(() {
             _completedTasks.add(2); // mark yoga as complete
           });
+          saveCompletionState();
         }
       },
     );
@@ -130,6 +162,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     if (allCompleted && !_wasAllCompletedBefore) {
       _wasAllCompletedBefore = true;
       _confettiController.play();
+      saveCompletionState(); // 🧠 Save only once when all 3 done
     }
 
     return Scaffold(
@@ -542,21 +575,21 @@ class _YogaTabState extends State<YogaTab> {
     YogaPose(
       name: "Cat-Cow Pose",
       benefit: "Increases flexibility of the spine.",
-      duration: 5,
+      duration: 3,
       animationUrl:
           "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/cat_cow_pose.gif",
     ),
     YogaPose(
       name: "Cat-Cow",
       benefit: "Releases back tension and syncs breath.",
-      duration: 5,
+      duration: 3,
       animationUrl:
           "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/child_pose.gif",
     ),
     YogaPose(
       name: "Legs Up the Wall",
       benefit: "Improves blood flow and eases anxiety.",
-      duration: 5,
+      duration: 3,
       animationUrl:
           "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/triangle_pose.gif",
     ),
