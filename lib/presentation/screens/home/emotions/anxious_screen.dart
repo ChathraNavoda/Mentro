@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AnxiousScreen extends StatefulWidget {
   const AnxiousScreen({super.key});
@@ -15,15 +17,26 @@ class AnxiousScreen extends StatefulWidget {
 
 class _AnxiousScreenState extends State<AnxiousScreen>
     with SingleTickerProviderStateMixin {
+  late ConfettiController _confettiController;
   late TabController _tabController;
   final Set<int> _completedTasks = {};
   bool _isBookmarked = false;
   bool _isSoundOn = true;
+  bool _wasAllCompletedBefore = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 10));
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    _tabController.dispose();
+    super.dispose();
   }
 
   Widget buildMeditationTab() {
@@ -36,6 +49,14 @@ class _AnxiousScreenState extends State<AnxiousScreen>
         }
       },
     );
+  }
+
+  void saveCompletionState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now().toIso8601String();
+
+    await prefs.setBool('tasks_completed', true);
+    await prefs.setString('completion_time', now);
   }
 
   Widget buildBreathingTab() {
@@ -62,10 +83,54 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     );
   }
 
+  Path drawStar(Size size) {
+    // ⭐ Draw star shape
+    double degToRad(double deg) => deg * (pi / 180.0);
+    const numberOfPoints = 5;
+    final path = Path();
+    final outerRadius = size.width / 2;
+    final innerRadius = outerRadius / 2.5;
+    final center = Offset(size.width / 2, size.height / 2);
+
+    double angle = degToRad(360 / numberOfPoints);
+    for (int i = 0; i < numberOfPoints * 2; i++) {
+      final isEven = i % 2 == 0;
+      final radius = isEven ? outerRadius : innerRadius;
+      final x = center.dx + radius * cos(i * angle);
+      final y = center.dy + radius * sin(i * angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    return path;
+  }
+
+  Widget buildStarConfetti() {
+    return ConfettiWidget(
+      confettiController: _confettiController,
+      blastDirectionality: BlastDirectionality.explosive,
+      shouldLoop: false,
+      numberOfParticles: 30,
+      maxBlastForce: 20,
+      minBlastForce: 8,
+      emissionFrequency: 0.05,
+      gravity: 0.3,
+      createParticlePath: drawStar, // ⭐ use your custom star shape
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     int completedCount = _completedTasks.length;
     bool allCompleted = completedCount == 3;
+    // 🎉 Play confetti only once
+    if (allCompleted && !_wasAllCompletedBefore) {
+      _wasAllCompletedBefore = true;
+      _confettiController.play();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -120,6 +185,10 @@ class _AnxiousScreenState extends State<AnxiousScreen>
                       },
                     ),
                     const SizedBox(width: 8),
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: buildStarConfetti(),
+                    ),
                     IconButton(
                       icon: Icon(
                         _isSoundOn ? Icons.volume_up : Icons.volume_off,
@@ -171,6 +240,7 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
   final _player = AudioPlayer();
   bool _isPlaying = false;
   bool _completed = false;
+  bool _showRestart = false;
   int _secondsLeft = 80;
 
   final List<String> _trackUrls = [
@@ -196,10 +266,11 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
 
     setState(() {
       _isPlaying = true;
-      _secondsLeft = 80;
       _completed = false;
+      _showRestart = false;
+      _secondsLeft = 3;
     });
-    // Pick a random track
+
     final random = Random();
     final selectedUrl = _trackUrls[random.nextInt(_trackUrls.length)];
 
@@ -211,7 +282,6 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
       return;
     }
 
-    // Timer countdown
     Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -230,6 +300,14 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
           _completed = true;
         });
         widget.onMeditationComplete();
+
+        // Wait 2 seconds, then show restart button
+        Future.delayed(const Duration(seconds: 2), () {
+          if (!mounted) return;
+          setState(() {
+            _showRestart = true;
+          });
+        });
       }
     });
   }
@@ -264,11 +342,17 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
         ElevatedButton(
           onPressed: _isPlaying ? null : startMeditation,
           style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4ECDC4),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24))),
-          child: Text(_completed ? 'Completed' : 'Start Meditation'),
+            backgroundColor: const Color(0xFF4ECDC4),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+          child: Text(
+            _completed
+                ? (_showRestart ? 'Restart Meditation' : 'Meditation Complete!')
+                : 'Start Meditation',
+          ),
         ),
       ],
     );
@@ -290,10 +374,11 @@ class _BreathingTabState extends State<BreathingTab>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Timer _timer;
-  int _secondsLeft = 60;
+  int _secondsLeft = 3;
   int _currentIndex = 0;
   bool _isPlaying = false;
   bool _completed = false;
+  bool _showRestart = false;
 
   final List<String> _breathingText = [
     "🌬️ Breathe in...",
@@ -316,7 +401,8 @@ class _BreathingTabState extends State<BreathingTab>
     setState(() {
       _isPlaying = true;
       _completed = false;
-      _secondsLeft = 60;
+      _showRestart = false;
+      _secondsLeft = 3;
       _currentIndex = 0;
     });
 
@@ -333,11 +419,21 @@ class _BreathingTabState extends State<BreathingTab>
       if (_secondsLeft <= 0) {
         timer.cancel();
         _controller.stop();
+
         setState(() {
           _isPlaying = false;
           _completed = true;
         });
-        widget.onBreathingComplete(); // ✅ trigger progress
+
+        widget.onBreathingComplete(); // notify
+
+        // 🎉 Show "Completed" briefly, then switch to "Restart Breathing"
+        Future.delayed(const Duration(seconds: 2), () {
+          if (!mounted) return;
+          setState(() {
+            _showRestart = true;
+          });
+        });
       }
     });
   }
@@ -380,8 +476,23 @@ class _BreathingTabState extends State<BreathingTab>
           style: const TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 30),
+        // ElevatedButton(
+        //   onPressed: _isPlaying ? null : startBreathing,
+        //   style: ElevatedButton.styleFrom(
+        //     backgroundColor: const Color(0xFF4ECDC4),
+        //     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        //     shape: RoundedRectangleBorder(
+        //       borderRadius: BorderRadius.circular(24),
+        //     ),
+        //   ),
+        //   child: Text(_completed ? 'Completed' : 'Start Breathing'),
+        // ),
         ElevatedButton(
-          onPressed: _isPlaying ? null : startBreathing,
+          onPressed: _isPlaying
+              ? null
+              : _showRestart
+                  ? startBreathing // restart
+                  : startBreathing, // first time
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4ECDC4),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
@@ -389,7 +500,11 @@ class _BreathingTabState extends State<BreathingTab>
               borderRadius: BorderRadius.circular(24),
             ),
           ),
-          child: Text(_completed ? 'Completed' : 'Start Breathing'),
+          child: Text(
+            _completed
+                ? (_showRestart ? 'Restart Breathing' : 'Completed')
+                : 'Start Breathing',
+          ),
         ),
       ],
     );
@@ -400,13 +515,14 @@ class YogaPose {
   final String name;
   final String benefit;
   final int duration; // seconds
-  final String animationPath; // Lottie or GIF
+
+  final String animationUrl;
 
   YogaPose({
     required this.name,
     required this.benefit,
     required this.duration,
-    required this.animationPath,
+    required this.animationUrl,
   });
 }
 
@@ -420,24 +536,29 @@ class YogaTab extends StatefulWidget {
 }
 
 class _YogaTabState extends State<YogaTab> {
+  bool _allComplete = false;
+
   final List<YogaPose> poses = [
     YogaPose(
-      name: "Child’s Pose",
-      benefit: "Relaxes spine and calms the mind.",
-      duration: 30,
-      animationPath: "assets/lottie/yoga1.json", // replace later
+      name: "Cat-Cow Pose",
+      benefit: "Increases flexibility of the spine.",
+      duration: 5,
+      animationUrl:
+          "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/cat_cow_pose.gif",
     ),
     YogaPose(
       name: "Cat-Cow",
       benefit: "Releases back tension and syncs breath.",
-      duration: 30,
-      animationPath: "assets/lottie/yoga2.json",
+      duration: 5,
+      animationUrl:
+          "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/child_pose.gif",
     ),
     YogaPose(
       name: "Legs Up the Wall",
       benefit: "Improves blood flow and eases anxiety.",
-      duration: 30,
-      animationPath: "assets/lottie/yoga3.json",
+      duration: 5,
+      animationUrl:
+          "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/triangle_pose.gif",
     ),
   ];
 
@@ -484,9 +605,24 @@ class _YogaTabState extends State<YogaTab> {
         isPoseComplete = false;
       });
     } else {
-      // Yoga session complete
-      widget.onYogaComplete();
+      // All poses completed
+      setState(() {
+        _allComplete = true;
+        isStarted = false;
+        isPoseComplete = false;
+      });
+      widget.onYogaComplete(); // optional callback
     }
+  }
+
+  void resetSession() {
+    setState(() {
+      currentPoseIndex = 0;
+      secondsLeft = 0;
+      isStarted = false;
+      isPoseComplete = false;
+      _allComplete = false;
+    });
   }
 
   @override
@@ -504,11 +640,7 @@ class _YogaTabState extends State<YogaTab> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Lottie.asset(
-            pose.animationPath,
-            height: 200,
-            repeat: isStarted && !isPoseComplete,
-          ),
+          Image.network(pose.animationUrl),
           const SizedBox(height: 20),
           Text(
             pose.name,
@@ -521,7 +653,12 @@ class _YogaTabState extends State<YogaTab> {
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 20),
-          if (isStarted)
+          if (_allComplete)
+            const Text(
+              "🎉 Yoga Session Complete!",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            )
+          else if (isStarted)
             Text(
               isPoseComplete
                   ? "✅ Pose Complete!"
@@ -530,8 +667,9 @@ class _YogaTabState extends State<YogaTab> {
             ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed:
-                isStarted ? (isPoseComplete ? nextPose : null) : startPose,
+            onPressed: _allComplete
+                ? resetSession
+                : (isStarted ? (isPoseComplete ? nextPose : null) : startPose),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4ECDC4),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
@@ -540,9 +678,11 @@ class _YogaTabState extends State<YogaTab> {
               ),
             ),
             child: Text(
-              isStarted
-                  ? (isPoseComplete ? "Next Pose" : "In Progress...")
-                  : "Start Pose",
+              _allComplete
+                  ? "Restart Session"
+                  : (isStarted
+                      ? (isPoseComplete ? "Next Pose" : "In Progress...")
+                      : "Start Pose"),
             ),
           ),
         ],
