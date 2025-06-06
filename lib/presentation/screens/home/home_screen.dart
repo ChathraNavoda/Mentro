@@ -15,11 +15,88 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final List<String> moodPriority = [
+    'anxious',
+    'angry',
+    'sad',
+    'neutral',
+    'happy'
+  ];
+
   String averageMood = '';
+  List<String> topMoods = [];
   @override
   void initState() {
     super.initState();
-    loadDailyData();
+    listenToMoodUpdates(); // real-time updates
+  }
+
+  void listenToMoodUpdates() {
+    final String userId = FirebaseAuth.instance.currentUser!.uid;
+
+    final DateTime start = DateTime.now();
+    final DateTime todayStart = DateTime(start.year, start.month, start.day);
+    final DateTime tomorrowStart = todayStart.add(const Duration(days: 1));
+
+    _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('ripples')
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
+        .where('date', isLessThan: Timestamp.fromDate(tomorrowStart))
+        .snapshots()
+        .listen((snapshot) {
+      final docs = snapshot.docs;
+
+      if (docs.isEmpty) {
+        if (mounted) {
+          setState(() {
+            averageMood = 'No data';
+          });
+        }
+        return;
+      }
+
+      Map<String, int> emotionCount = {};
+
+      for (var doc in docs) {
+        final data = doc.data();
+        final emotion = data['emotion'] ?? 'neutral';
+        emotionCount[emotion] = (emotionCount[emotion] ?? 0) + 1;
+      }
+
+      if (mounted) {
+        //changed
+        setState(() {
+          averageMood = 'Neutral (100%)';
+          topMoods = [];
+
+          final total = emotionCount.values.fold(0, (a, b) => a + b);
+
+          if (emotionCount.isNotEmpty) {
+            final maxCount =
+                emotionCount.values.reduce((a, b) => a > b ? a : b);
+            final topEmotions =
+                emotionCount.entries.where((e) => e.value == maxCount).toList();
+
+            // Store the mood names for image rendering
+            topMoods = topEmotions.map((e) => e.key.toLowerCase()).toList();
+
+            if (topEmotions.length > 1 && total % 2 == 0) {
+              averageMood = topEmotions
+                  .map((e) =>
+                      '${e.key[0].toUpperCase()}${e.key.substring(1)} (${((e.value / total) * 100).round()}%)')
+                  .join(' & ');
+            } else {
+              final top = topEmotions.first;
+              final percent = ((top.value / total) * 100).round();
+              averageMood =
+                  '${top.key[0].toUpperCase()}${top.key.substring(1)} ($percent%)';
+            }
+          }
+        });
+      }
+    });
   }
 
   Future<void> loadDailyData() async {
@@ -69,6 +146,25 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     }
+  }
+
+  String getSuggestionMood(String avgMood) {
+    // Extract all mood names from the string (e.g. Happy (50%) & Anxious (50%))
+    final moodRegex = RegExp(r'([A-Za-z]+) \(\d+%\)');
+    final matches = moodRegex.allMatches(avgMood);
+
+    final moods = matches.map((m) => m.group(1)!.toLowerCase()).toList();
+
+    if (moods.isEmpty) return '';
+
+    // If multiple moods, prioritize
+    for (final mood in moodPriority) {
+      if (moods.contains(mood)) {
+        return mood;
+      }
+    }
+
+    return moods.first; // fallback
   }
 
   Widget buildMoodImage(String mood, {double size = 48}) {
@@ -213,15 +309,27 @@ class _HomeScreenState extends State<HomeScreen> {
               Text('Average Mood for Today',
                   style: Theme.of(context).textTheme.titleMedium),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  buildMoodImage(averageMood),
-                  const SizedBox(width: 25),
-                  Text(averageMood,
-                      style: Theme.of(context).textTheme.titleMedium),
+                  Row(
+                    children: topMoods
+                        .map((mood) => Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: buildMoodImage(mood, size: 48),
+                            ))
+                        .toList(),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Average Mood: $averageMood',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
                 ],
               ),
-              buildMoodSuggestion(averageMood), // 👈 Add this
+              buildMoodSuggestion(getSuggestionMood(averageMood)),
+              // 👈 Add this
             ],
           ),
         ),

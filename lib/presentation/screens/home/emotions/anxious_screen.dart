@@ -51,12 +51,14 @@ class _AnxiousScreenState extends State<AnxiousScreen>
   }
 
   Widget buildYogaTab() {
-    return Center(
-      child: Text(
-        "🧎 Gentle yoga poses to release tension\n(Show images or timer)",
-        textAlign: TextAlign.center,
-        style: GoogleFonts.outfit(fontSize: 18),
-      ),
+    return YogaTab(
+      onYogaComplete: () {
+        if (!_completedTasks.contains(2)) {
+          setState(() {
+            _completedTasks.add(2); // mark yoga as complete
+          });
+        }
+      },
     );
   }
 
@@ -390,6 +392,161 @@ class _BreathingTabState extends State<BreathingTab>
           child: Text(_completed ? 'Completed' : 'Start Breathing'),
         ),
       ],
+    );
+  }
+}
+
+class YogaPose {
+  final String name;
+  final String benefit;
+  final int duration; // seconds
+  final String animationPath; // Lottie or GIF
+
+  YogaPose({
+    required this.name,
+    required this.benefit,
+    required this.duration,
+    required this.animationPath,
+  });
+}
+
+class YogaTab extends StatefulWidget {
+  final VoidCallback onYogaComplete;
+
+  const YogaTab({super.key, required this.onYogaComplete});
+
+  @override
+  State<YogaTab> createState() => _YogaTabState();
+}
+
+class _YogaTabState extends State<YogaTab> {
+  final List<YogaPose> poses = [
+    YogaPose(
+      name: "Child’s Pose",
+      benefit: "Relaxes spine and calms the mind.",
+      duration: 30,
+      animationPath: "assets/lottie/yoga1.json", // replace later
+    ),
+    YogaPose(
+      name: "Cat-Cow",
+      benefit: "Releases back tension and syncs breath.",
+      duration: 30,
+      animationPath: "assets/lottie/yoga2.json",
+    ),
+    YogaPose(
+      name: "Legs Up the Wall",
+      benefit: "Improves blood flow and eases anxiety.",
+      duration: 30,
+      animationPath: "assets/lottie/yoga3.json",
+    ),
+  ];
+
+  int currentPoseIndex = 0;
+  int secondsLeft = 0;
+  bool isStarted = false;
+  bool isPoseComplete = false;
+  Timer? timer;
+
+  void startPose() {
+    final currentPose = poses[currentPoseIndex];
+
+    setState(() {
+      secondsLeft = currentPose.duration;
+      isStarted = true;
+      isPoseComplete = false;
+    });
+
+    timer?.cancel();
+    timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+
+      setState(() {
+        secondsLeft--;
+      });
+
+      if (secondsLeft <= 0) {
+        t.cancel();
+        setState(() {
+          isPoseComplete = true;
+        });
+      }
+    });
+  }
+
+  void nextPose() {
+    if (currentPoseIndex < poses.length - 1) {
+      setState(() {
+        currentPoseIndex++;
+        isStarted = false;
+        isPoseComplete = false;
+      });
+    } else {
+      // Yoga session complete
+      widget.onYogaComplete();
+    }
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pose = poses[currentPoseIndex];
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Lottie.asset(
+            pose.animationPath,
+            height: 200,
+            repeat: isStarted && !isPoseComplete,
+          ),
+          const SizedBox(height: 20),
+          Text(
+            pose.name,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            pose.benefit,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 16),
+          ),
+          const SizedBox(height: 20),
+          if (isStarted)
+            Text(
+              isPoseComplete
+                  ? "✅ Pose Complete!"
+                  : "Time Left: $secondsLeft sec",
+              style: const TextStyle(fontSize: 18),
+            ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed:
+                isStarted ? (isPoseComplete ? nextPose : null) : startPose,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4ECDC4),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            child: Text(
+              isStarted
+                  ? (isPoseComplete ? "Next Pose" : "In Progress...")
+                  : "Start Pose",
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

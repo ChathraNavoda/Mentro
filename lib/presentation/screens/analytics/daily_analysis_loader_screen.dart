@@ -149,6 +149,7 @@ class DailyAnalysisLoaderScreen extends StatefulWidget {
 
 class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<String> topEmotionList = [];
 
   bool isLoading = true;
   String date = '';
@@ -159,6 +160,7 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
   String dayLabel = '';
   List<Map<String, dynamic>> moodTimeline = [];
   List<Map<String, dynamic>> moodIntensityByTime = [];
+  List<String> topMoods = [];
 
   static const Map<String, Color> emotionColors = {
     'happy': Color(0xFFEDEEA5),
@@ -232,16 +234,40 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
 
       setState(() {
         date = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
-        averageMood = emotionCount.entries
-            .reduce((a, b) => a.value > b.value ? a : b)
-            .key;
-        mostCommonTag = tagCount.isNotEmpty
-            ? tagCount.entries.reduce((a, b) => a.value > b.value ? a : b).key
-            : 'none';
         rippleCount = docs.length;
         dayIndex = widget.selectedDate.weekday % 7;
         dayLabel = DateFormat('EEEE').format(widget.selectedDate);
         isLoading = false;
+
+        averageMood = 'Neutral (100%)';
+        topMoods = [];
+
+        final total = emotionCount.values.fold(0, (a, b) => a + b);
+
+        if (emotionCount.isNotEmpty) {
+          final maxCount = emotionCount.values.reduce((a, b) => a > b ? a : b);
+          final topEmotions =
+              emotionCount.entries.where((e) => e.value == maxCount).toList();
+
+          // Store the mood names for image rendering
+          topMoods = topEmotions.map((e) => e.key.toLowerCase()).toList();
+
+          if (topEmotions.length > 1 && total % 2 == 0) {
+            averageMood = topEmotions
+                .map((e) =>
+                    '${e.key[0].toUpperCase()}${e.key.substring(1)} (${((e.value / total) * 100).round()}%)')
+                .join(' & ');
+          } else {
+            final top = topEmotions.first;
+            final percent = ((top.value / total) * 100).round();
+            averageMood =
+                '${top.key[0].toUpperCase()}${top.key.substring(1)} ($percent%)';
+          }
+        }
+
+        mostCommonTag = tagCount.isNotEmpty
+            ? tagCount.entries.reduce((a, b) => a.value > b.value ? a : b).key
+            : 'none';
       });
     } catch (e) {
       if (mounted) {
@@ -310,14 +336,42 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
                     Text('Date: $date',
                         style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 16),
+                    // Row(
+                    //   crossAxisAlignment: CrossAxisAlignment.center,
+                    //   children: [
+                    //     ...topEmotionList.map((mood) => Padding(
+                    //           padding: const EdgeInsets.only(right: 8),
+                    //           child: buildMoodImage(mood, size: 48),
+                    //         )),
+                    //     Expanded(
+                    //       child: Text(
+                    //         'Average Mood: $averageMood',
+                    //         style: Theme.of(context).textTheme.titleMedium,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        buildMoodImage(averageMood),
+                        Row(
+                          children: topMoods
+                              .map((mood) => Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: buildMoodImage(mood, size: 48),
+                                  ))
+                              .toList(),
+                        ),
                         const SizedBox(width: 12),
-                        Text('Average Moodoooo: $averageMood',
-                            style: Theme.of(context).textTheme.titleMedium),
+                        Expanded(
+                          child: Text(
+                            'Average Mood: $averageMood',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
                       ],
                     ),
+
                     const SizedBox(height: 8),
                     Text('Most Common Tag: #$mostCommonTag'),
                     Text('Ripple Count: $rippleCount'),
