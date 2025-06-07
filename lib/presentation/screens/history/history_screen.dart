@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:mentro/presentation/screens/ripples/view_ripple_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -17,14 +18,38 @@ class _HistoryScreenState extends State<HistoryScreen> {
   bool sortDescending = true;
   bool showArchived = false;
   bool isAuthenticating = false;
+  bool isArchiveProtected = false;
 
   final LocalAuthentication auth = LocalAuthentication();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadArchiveProtection();
+  }
+
+  Future<void> _loadArchiveProtection() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isArchiveProtected = prefs.getBool('isArchiveProtected') ?? false;
+    });
+  }
 
   Future<void> _authenticateAndToggleArchive() async {
     try {
       setState(() => isAuthenticating = true);
 
-      bool didAuthenticate = await auth.authenticate(
+      final canAuth =
+          await auth.canCheckBiometrics || await auth.isDeviceSupported();
+      if (!canAuth) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Biometric authentication not available')),
+        );
+        return;
+      }
+
+      final didAuthenticate = await auth.authenticate(
         localizedReason: 'Please authenticate to view archived ripples',
         options: const AuthenticationOptions(biometricOnly: true),
       );
@@ -33,6 +58,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
         setState(() {
           showArchived = true;
         });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Authentication failed')),
+        );
       }
     } catch (e) {
       debugPrint("Biometric auth failed: $e");
@@ -41,9 +70,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  void _toggleArchiveView() {
+    if (showArchived) {
+      setState(() {
+        showArchived = false;
+      });
+    } else {
+      if (isArchiveProtected) {
+        _authenticateAndToggleArchive();
+      } else {
+        setState(() {
+          showArchived = true;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userId = FirebaseAuth.instance.currentUser?.uid;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Ripple History"),
@@ -61,16 +107,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             tooltip: showArchived
                 ? "Hide Archived Ripples"
                 : "View Archived Ripples",
-            onPressed: () {
-              if (showArchived) {
-                setState(() {
-                  showArchived = false;
-                });
-              } else {
-                _authenticateAndToggleArchive();
-              }
-            },
-          )
+            onPressed: _toggleArchiveView,
+          ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -103,11 +141,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           if (ripples.isEmpty) {
             return Center(
-              child: Text(
-                showArchived
-                    ? "No archived ripples found."
-                    : "No ripples found.",
-              ),
+              child: Text(showArchived
+                  ? "No archived ripples found."
+                  : "No ripples found."),
             );
           }
 
@@ -135,7 +171,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Card(
                   margin: const EdgeInsets.all(12),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 3,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -163,17 +200,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
+                        Text(trigger),
+                        const SizedBox(height: 4),
                         Text(
-                          "Trigger: $trigger",
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        const SizedBox(height: 6),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: Text(
-                            DateFormat('MMMM dd, yyyy – h:mm a').format(date),
-                            style: const TextStyle(fontSize: 12),
-                          ),
+                          DateFormat('MMMM dd, yyyy').format(date),
+                          style:
+                              const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -190,51 +222,42 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void _showFilterDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) {
-        String tempEmotion = selectedEmotion;
-        bool tempSort = sortDescending;
+      builder: (context) {
         return AlertDialog(
-          title: const Text("Filter & Sort"),
+          title: const Text("Filter Ripples"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButton<String>(
-                value: tempEmotion,
+                value: selectedEmotion,
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedEmotion = value;
+                    });
+                    Navigator.pop(context);
+                  }
+                },
                 items: ['All', 'Happy', 'Sad', 'Angry', 'Relaxed']
                     .map((e) => DropdownMenuItem(
                           value: e,
                           child: Text(e),
                         ))
                     .toList(),
-                onChanged: (value) {
-                  tempEmotion = value!;
-                },
               ),
+              const SizedBox(height: 10),
               SwitchListTile(
-                title: const Text("Newest First"),
-                value: tempSort,
+                value: sortDescending,
                 onChanged: (val) {
-                  tempSort = val;
+                  setState(() {
+                    sortDescending = val;
+                  });
+                  Navigator.pop(context);
                 },
-              )
+                title: const Text("Sort Newest First"),
+              ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  selectedEmotion = tempEmotion;
-                  sortDescending = tempSort;
-                });
-                Navigator.pop(context);
-              },
-              child: const Text("Apply"),
-            )
-          ],
         );
       },
     );

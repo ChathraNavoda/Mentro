@@ -3,24 +3,44 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:mentro/presentation/screens/ripples/archive_ripples_screen.dart';
 import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
 import 'package:mentro/presentation/screens/ripples/view_ripple_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class RippleScreen extends StatelessWidget {
+class RippleScreen extends StatefulWidget {
   final String userId;
   const RippleScreen({super.key, required this.userId});
 
-  Future<void> _handleArchiveAccess(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final isProtected = prefs.getBool('isArchiveProtected') ?? false;
+  @override
+  State<RippleScreen> createState() => _RippleScreenState();
+}
 
-    if (isProtected) {
-      final auth = LocalAuthentication();
+class _RippleScreenState extends State<RippleScreen> {
+  bool showArchived = false;
+  bool isAuthenticating = false;
+  bool isArchiveProtected = false;
+
+  final LocalAuthentication auth = LocalAuthentication();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadArchiveProtection();
+  }
+
+  Future<void> _loadArchiveProtection() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isArchiveProtected = prefs.getBool('isArchiveProtected') ?? false;
+    });
+  }
+
+  Future<void> _authenticateAndToggleArchive() async {
+    try {
+      setState(() => isAuthenticating = true);
+
       final canAuth =
           await auth.canCheckBiometrics || await auth.isDeviceSupported();
-
       if (!canAuth) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -30,22 +50,40 @@ class RippleScreen extends StatelessWidget {
       }
 
       final didAuthenticate = await auth.authenticate(
-        localizedReason: 'Please authenticate to access archived ripples',
+        localizedReason: 'Please authenticate to view archived ripples',
         options: const AuthenticationOptions(biometricOnly: true),
       );
 
-      if (!didAuthenticate) {
+      if (didAuthenticate) {
+        setState(() {
+          showArchived = true;
+        });
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Authentication failed')),
         );
-        return;
+      }
+    } catch (e) {
+      debugPrint("Biometric auth failed: $e");
+    } finally {
+      setState(() => isAuthenticating = false);
+    }
+  }
+
+  void _toggleArchiveView() {
+    if (showArchived) {
+      setState(() {
+        showArchived = false;
+      });
+    } else {
+      if (isArchiveProtected) {
+        _authenticateAndToggleArchive();
+      } else {
+        setState(() {
+          showArchived = true;
+        });
       }
     }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ArchivedRipplesScreen()),
-    );
   }
 
   @override
@@ -56,32 +94,39 @@ class RippleScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF4ECDC4),
         actions: [
           IconButton(
-            icon: const Icon(Icons.archive),
-            tooltip: 'View Archived Ripples',
-            onPressed: () => _handleArchiveAccess(context),
+            icon: Icon(showArchived ? Icons.lock_open : Icons.lock),
+            tooltip: showArchived
+                ? "Hide Archived Ripples"
+                : "View Archived Ripples",
+            onPressed: _toggleArchiveView,
           ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(userId)
+            .doc(widget.userId)
             .collection('ripples')
-            .where('isArchived', isEqualTo: false)
+            .where('isArchived', isEqualTo: showArchived)
             .orderBy('time', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(child: Text("Something went wrong."));
           }
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              isAuthenticating) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final ripples = snapshot.data!.docs;
 
           if (ripples.isEmpty) {
-            return const Center(child: Text("No ripples found."));
+            return Center(
+              child: Text(showArchived
+                  ? "No archived ripples found."
+                  : "No ripples found."),
+            );
           }
 
           return ListView.builder(
@@ -171,20 +216,9 @@ class RippleScreen extends StatelessWidget {
                                           .collection('ripples')
                                           .doc(docId)
                                           .delete();
-
                                       Navigator.pop(context);
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text('Ripple deleted')),
-                                      );
                                     } catch (e) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                'Error deleting ripple: $e')),
-                                      );
+                                      debugPrint("Delete failed: $e");
                                     }
                                   },
                                   child: const Text('Delete',
@@ -196,14 +230,9 @@ class RippleScreen extends StatelessWidget {
                         }
                       },
                       itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'view', child: Text('Edit')),
                         const PopupMenuItem(
-                          value: 'view',
-                          child: Text('Update'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Delete'),
-                        ),
+                            value: 'delete', child: Text('Delete')),
                       ],
                     ),
                   ),
