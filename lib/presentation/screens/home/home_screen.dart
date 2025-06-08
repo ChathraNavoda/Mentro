@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/presentation/screens/home/add_ripple_screen.dart';
 import 'package:mentro/presentation/screens/home/emotions/anxious_screen.dart';
 import 'package:mentro/presentation/screens/home/emotions/happy_screen.dart';
+import 'package:timezone/data/latest.dart';
+import 'package:timezone/timezone.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +17,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final FlutterLocalNotificationsPlugin notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final List<String> moodPriority = [
     'anxious',
@@ -27,8 +32,41 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> topMoods = [];
   @override
   void initState() {
+    init();
     super.initState();
     listenToMoodUpdates(); // real-time updates
+  }
+
+  Future<void> init() async {
+    initializeTimeZones();
+    setLocalLocation(getLocation('Asia/Colombo'));
+
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: androidSettings);
+    await notificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> showTestNotification() async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+      'channel_id_01', // must match when scheduling later
+      'General Notifications',
+      channelDescription: 'For Android 10 test',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails notificationDetails =
+        NotificationDetails(android: androidDetails);
+
+    await notificationsPlugin.show(
+      0, // Notification ID
+      '🎉 Hello Bestie!',
+      'This notification is working on your Android 10 device 💖',
+      notificationDetails,
+    );
   }
 
   void listenToMoodUpdates() {
@@ -272,6 +310,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: GoogleFonts.outfit(
                         fontSize: 20, fontWeight: FontWeight.w400),
                   ),
+                  ElevatedButton(
+                    onPressed: showTestNotification,
+                    child: Text('Show Notification'),
+                  )
                 ],
               ),
               const SizedBox(height: 24),
@@ -329,6 +371,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               buildMoodSuggestion(getSuggestionMood(averageMood)),
+              //
+              //
               // 👈 Add this
             ],
           ),

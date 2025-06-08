@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
+import 'package:mentro/core/services/notification/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnxiousScreen extends StatefulWidget {
@@ -69,8 +70,23 @@ class _AnxiousScreenState extends State<AnxiousScreen>
           _wasAllCompletedBefore = _completedTasks.length == 3;
         });
       } else {
+        // ✅ only show notification if 1 or 2 tasks were completed
+        final completedCount = savedTasks.length;
+
+        if (completedCount > 0 && completedCount < 3) {
+          NotificationService.showNotification(
+            title: 'Tasks Incomplete',
+            body:
+                'You haven’t completed your 3 calm tasks today. Time to check in!',
+          );
+          // 🕗 trigger 8PM nudge
+          NotificationService.schedule8PMReminderIfNeeded(completedCount);
+        }
+
+        // Clear old state anyway
         await prefs.remove('completed_tasks');
         await prefs.remove('completion_time');
+
         setState(() {
           _completedTasks.clear();
           _wasAllCompletedBefore = false;
@@ -84,9 +100,21 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     final now = DateTime.now().toIso8601String();
 
     await prefs.setStringList(
-        'completed_tasks', _completedTasks.map((e) => e.toString()).toList());
-
+      'completed_tasks',
+      _completedTasks.map((e) => e.toString()).toList(),
+    );
     await prefs.setString('completion_time', now);
+
+    if (_completedTasks.length == 3) {
+      // 🎉 All done - cancel any reminder
+      NotificationService.cancelReminder();
+    } else if (_completedTasks.isNotEmpty) {
+      // 🕓 Partial completion - schedule 1-hour nudge
+      NotificationService.scheduleOneHourNudge();
+    } else {
+      // 0/3 — do nothing now, wait for 8PM check
+      NotificationService.cancelReminder(); // Just in case
+    }
   }
 
   Widget buildBreathingTab() {
