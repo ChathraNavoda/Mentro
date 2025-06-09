@@ -74,10 +74,50 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     );
   }
 
-  Future<void> checkCompletionState() async {
+  // Future<void> checkCompletionState() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final String? uid = FirebaseAuth.instance.currentUser?.uid;
+  //   if (uid == null || !mounted) return;
+
+  //   final savedTasks = prefs.getStringList('completed_tasks_$uid');
+  //   final timeString = prefs.getString('completion_time_$uid');
+
+  //   if (savedTasks != null && timeString != null) {
+  //     final savedTime = DateTime.parse(timeString);
+  //     final now = DateTime.now();
+
+  //     final isExpired = now.difference(savedTime).inHours >= 24;
+
+  //     final completedCount = savedTasks.length;
+
+  //     if (isExpired && completedCount < 3 && completedCount > 0) {
+  //       // ✅ Notify instantly if expired and incomplete
+  //       await NotificationService.showNotification(
+  //         title: 'Tasks Incomplete',
+  //         body:
+  //             'You haven’t completed your 3 calm tasks today. Time to check in!',
+  //       );
+
+  //       // Reset timer so we don’t show again immediately
+  //       await prefs.setString(
+  //         'completion_time_$uid',
+  //         now.toIso8601String(),
+  //       );
+  //     }
+
+  //     // Restore local UI state
+  //     setState(() {
+  //       _completedTasks
+  //         ..clear()
+  //         ..addAll(savedTasks.map(int.parse));
+  //       _wasAllCompletedBefore = completedCount == 3;
+  //     });
+  //   }
+  // }
+  Future<bool> checkCompletionState() async {
     final prefs = await SharedPreferences.getInstance();
     final String? uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null || !mounted) return;
+    if (uid == null || !mounted) return false;
 
     final savedTasks = prefs.getStringList('completed_tasks_$uid');
     final timeString = prefs.getString('completion_time_$uid');
@@ -86,33 +126,28 @@ class _AnxiousScreenState extends State<AnxiousScreen>
       final savedTime = DateTime.parse(timeString);
       final now = DateTime.now();
 
-      final isExpired = now.difference(savedTime).inHours >= 24;
+      if (now.difference(savedTime).inHours < 24) {
+        setState(() {
+          _completedTasks
+            ..clear()
+            ..addAll(savedTasks.map(int.parse));
+          _wasAllCompletedBefore = _completedTasks.length == 3;
+        });
 
-      final completedCount = savedTasks.length;
-
-      if (isExpired && completedCount < 3 && completedCount > 0) {
-        // ✅ Notify instantly if expired and incomplete
-        await NotificationService.showNotification(
-          title: 'Tasks Incomplete',
-          body:
-              'You haven’t completed your 3 calm tasks today. Time to check in!',
-        );
-
-        // Reset timer so we don’t show again immediately
-        await prefs.setString(
-          'completion_time_$uid',
-          now.toIso8601String(),
-        );
+        return _completedTasks.length < 3; // ✅ INCOMPLETE
       }
 
-      // Restore local UI state
-      setState(() {
-        _completedTasks
-          ..clear()
-          ..addAll(savedTasks.map(int.parse));
-        _wasAllCompletedBefore = completedCount == 3;
-      });
+      // Clean up expired
+      await prefs.remove('completed_tasks_$uid');
+      await prefs.remove('completion_time_$uid');
     }
+
+    setState(() {
+      _completedTasks.clear();
+      _wasAllCompletedBefore = false;
+    });
+
+    return false;
   }
 
   // ✅ Save calm task completion

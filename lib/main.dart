@@ -5,6 +5,8 @@ import 'package:mentro/core/services/notification/notification_service.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
 import 'package:mentro/presentation/screens/home/custom_bottom_navbar.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -18,6 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorObservers: [routeObserver],
       debugShowCheckedModeBanner: false,
       home: StreamBuilder(
           stream: FirebaseAuth.instance.authStateChanges(),

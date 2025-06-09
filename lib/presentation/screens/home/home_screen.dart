@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mentro/main.dart';
 import 'package:mentro/presentation/screens/home/add_ripple_screen.dart';
 import 'package:mentro/presentation/screens/home/emotions/anxious_screen.dart';
 import 'package:mentro/presentation/screens/home/emotions/happy_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart';
 import 'package:timezone/timezone.dart';
 
@@ -16,7 +18,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
+  bool showIncompleteBanner = false;
+  bool _wasBannerChecked = false;
+
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -30,11 +35,49 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String averageMood = '';
   List<String> topMoods = [];
+  // @override
+  // void initState() {
+  //   init();
+  //   super.initState();
+  //   listenToMoodUpdates(); // real-time updates
+  //   checkCompletionReminder();
+  // }
   @override
   void initState() {
-    init();
     super.initState();
-    listenToMoodUpdates(); // real-time updates
+
+    init();
+    listenToMoodUpdates();
+    checkCompletionReminder();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+    // This ensures the check runs every time the user returns to the Home tab
+    if (ModalRoute.of(context)?.isCurrent == true && !_wasBannerChecked) {
+      checkCompletionReminder();
+      _wasBannerChecked = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this); // Unregister
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // If coming back from another screen via Navigator.pop
+    _wasBannerChecked = false; // reset flag to trigger check again
+  }
+
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      checkCompletionReminder(); // Check again when user comes back to Home tab
+    }
   }
 
   Future<void> init() async {
@@ -46,6 +89,37 @@ class _HomeScreenState extends State<HomeScreen> {
     const InitializationSettings initializationSettings =
         InitializationSettings(android: androidSettings);
     await notificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> checkCompletionReminder() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+
+    final savedTasks = prefs.getStringList('completed_tasks_$uid');
+    final timeString = prefs.getString('completion_time_$uid');
+
+    if (savedTasks != null && timeString != null) {
+      final savedTime = DateTime.parse(timeString);
+      final now = DateTime.now();
+
+      if (now.difference(savedTime).inHours < 24) {
+        final wasAllCompleted = savedTasks.length == 3;
+        if (!wasAllCompleted) {
+          setState(() {
+            showIncompleteBanner = true;
+          });
+          return;
+        }
+      } else {
+        await prefs.remove('completed_tasks_$uid');
+        await prefs.remove('completion_time_$uid');
+      }
+    }
+
+    setState(() {
+      showIncompleteBanner = false;
+    });
   }
 
   Future<void> showTestNotification() async {
@@ -374,6 +448,50 @@ class _HomeScreenState extends State<HomeScreen> {
               //
               //
               // 👈 Add this
+
+              if (showIncompleteBanner)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AnxiousScreen()),
+                    ).then((_) {
+                      checkCompletionReminder(); // Recheck when coming back
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3CD),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFFEEBA)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            color: Color(0xFF856404)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "You haven't completed all your tasks today. Tap here to finish them!",
+                            style: GoogleFonts.outfit(
+                                color: const Color(0xFF856404)),
+                          ),
+                        ),
+                        IconButton(
+                          icon:
+                              const Icon(Icons.close, color: Color(0xFF856404)),
+                          onPressed: () {
+                            setState(() {
+                              showIncompleteBanner = false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
