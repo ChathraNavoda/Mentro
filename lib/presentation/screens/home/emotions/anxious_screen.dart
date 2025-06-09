@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
 import 'package:mentro/core/services/notification/notification_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnxiousScreen extends StatefulWidget {
@@ -18,6 +21,8 @@ class AnxiousScreen extends StatefulWidget {
 
 class _AnxiousScreenState extends State<AnxiousScreen>
     with SingleTickerProviderStateMixin {
+  final FlutterLocalNotificationsPlugin notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   late ConfettiController _confettiController;
   late TabController _tabController;
   final Set<int> _completedTasks = {};
@@ -31,14 +36,29 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     _tabController = TabController(length: 3, vsync: this);
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 10));
+    _requestNotificationPermission();
+
+    // ✅ Check immediately and periodically every minute
     checkCompletionState();
+    Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (!mounted) return;
+      checkCompletionState();
+    });
   }
 
   @override
   void dispose() {
-    _confettiController.dispose();
     _tabController.dispose();
+    _confettiController.dispose();
     super.dispose();
+  }
+
+// ✅ Ask for notification permission
+  Future<void> _requestNotificationPermission() async {
+    var status = await Permission.notification.status;
+    if (!status.isGranted) {
+      await Permission.notification.request();
+    }
   }
 
   Widget buildMeditationTab() {
@@ -54,66 +74,69 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     );
   }
 
-  void checkCompletionState() async {
+  Future<void> checkCompletionState() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedTasks = prefs.getStringList('completed_tasks');
-    final timeString = prefs.getString('completion_time');
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+
+    final savedTasks = prefs.getStringList('completed_tasks_$uid');
+    final timeString = prefs.getString('completion_time_$uid');
 
     if (savedTasks != null && timeString != null) {
       final savedTime = DateTime.parse(timeString);
       final now = DateTime.now();
 
-      if (now.difference(savedTime).inHours < 24) {
-        setState(() {
-          _completedTasks.clear();
-          _completedTasks.addAll(savedTasks.map(int.parse));
-          _wasAllCompletedBefore = _completedTasks.length == 3;
-        });
-      } else {
-        // ✅ only show notification if 1 or 2 tasks were completed
-        final completedCount = savedTasks.length;
+      final isExpired = now.difference(savedTime).inHours >= 24;
 
-        if (completedCount > 0 && completedCount < 3) {
-          NotificationService.showNotification(
-            title: 'Tasks Incomplete',
-            body:
-                'You haven’t completed your 3 calm tasks today. Time to check in!',
-          );
-          // 🕗 trigger 8PM nudge
-          NotificationService.schedule8PMReminderIfNeeded(completedCount);
-        }
+      final completedCount = savedTasks.length;
 
-        // Clear old state anyway
-        await prefs.remove('completed_tasks');
-        await prefs.remove('completion_time');
+      if (isExpired && completedCount < 3 && completedCount > 0) {
+        // ✅ Notify instantly if expired and incomplete
+        await NotificationService.showNotification(
+          title: 'Tasks Incomplete',
+          body:
+              'You haven’t completed your 3 calm tasks today. Time to check in!',
+        );
 
-        setState(() {
-          _completedTasks.clear();
-          _wasAllCompletedBefore = false;
-        });
+        // Reset timer so we don’t show again immediately
+        await prefs.setString(
+          'completion_time_$uid',
+          now.toIso8601String(),
+        );
       }
+
+      // Restore local UI state
+      setState(() {
+        _completedTasks
+          ..clear()
+          ..addAll(savedTasks.map(int.parse));
+        _wasAllCompletedBefore = completedCount == 3;
+      });
     }
   }
 
-  void saveCompletionState() async {
+  // ✅ Save calm task completion
+  Future<void> saveCompletionState() async {
     final prefs = await SharedPreferences.getInstance();
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
     final now = DateTime.now().toIso8601String();
+    final completedCount = _completedTasks.length;
 
     await prefs.setStringList(
-      'completed_tasks',
+      'completed_tasks_$uid',
       _completedTasks.map((e) => e.toString()).toList(),
     );
-    await prefs.setString('completion_time', now);
+    await prefs.setString('completion_time_$uid', now);
 
-    if (_completedTasks.length == 3) {
-      // 🎉 All done - cancel any reminder
-      NotificationService.cancelReminder();
-    } else if (_completedTasks.isNotEmpty) {
-      // 🕓 Partial completion - schedule 1-hour nudge
-      NotificationService.scheduleOneHourNudge();
+    if (completedCount == 3) {
+      await NotificationService.cancelReminder();
+    } else if (completedCount > 0) {
+      await NotificationService.scheduleOneHourNudge();
+      await NotificationService.schedule8PMReminderIfNeeded(completedCount);
     } else {
-      // 0/3 — do nothing now, wait for 8PM check
-      NotificationService.cancelReminder(); // Just in case
+      await NotificationService.cancelReminder();
     }
   }
 
@@ -263,6 +286,28 @@ class _AnxiousScreenState extends State<AnxiousScreen>
                     ),
                   ],
                 ),
+                ElevatedButton(
+                  onPressed: () {
+                    NotificationService.showNotification(
+                      title: 'Test Notification',
+                      body: 'This is just a test 🎉',
+                    );
+                  },
+                  child: Text('Send Test Notification'),
+                ),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     NotificationService.debugScheduledNotification();
+                //   },
+                //   child: Text('10s'),
+                // ),
+                // ElevatedButton(
+                //   onPressed: () async {
+                //     await _requestNotificationPermission();
+                //     await NotificationService.scheduleTestNotification();
+                //   },
+                //   child: Text('🔔 Schedule 10s Test Notification'),
+                // ),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.pop(context),
@@ -379,7 +424,7 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
       children: [
         Lottie.asset(
           'assets/lottie/meditation2.json',
-          height: 200,
+          height: 100,
           repeat: _isPlaying,
         ),
         const SizedBox(height: 20),

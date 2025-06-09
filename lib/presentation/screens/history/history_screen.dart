@@ -149,6 +149,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           return ListView.builder(
             itemCount: ripples.length,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             itemBuilder: (context, index) {
               final ripple = ripples[index];
               final data = ripple.data() as Map<String, dynamic>;
@@ -169,43 +170,52 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   );
                 },
                 child: Card(
-                  margin: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  elevation: 4,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  elevation: 3,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                        horizontal: 16, vertical: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             CircleAvatar(
+                              radius: 22,
                               backgroundImage: AssetImage(
                                   'assets/images/${emotion.toLowerCase()}.png'),
                               backgroundColor: Colors.white,
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Text(
                                 emotion,
                                 style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF34495E),
+                                ),
                               ),
                             ),
                             if (isArchived)
                               const Icon(Icons.lock, color: Colors.grey),
                           ],
                         ),
+                        const SizedBox(height: 12),
+                        Text(
+                          trigger,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                         const SizedBox(height: 8),
-                        Text(trigger),
-                        const SizedBox(height: 4),
                         Text(
                           DateFormat('MMMM dd, yyyy').format(date),
-                          style:
-                              const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic),
                         ),
                       ],
                     ),

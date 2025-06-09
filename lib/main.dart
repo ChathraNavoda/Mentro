@@ -8,7 +8,7 @@ import 'package:mentro/presentation/screens/home/custom_bottom_navbar.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await NotificationService.initialize();
+  await NotificationService.init();
   runApp(MyApp());
 }
 

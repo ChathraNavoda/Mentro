@@ -90,7 +90,7 @@ class _RippleScreenState extends State<RippleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Your Ripples"),
+        title: Text(showArchived ? "Archived Ripples" : "Your Ripples"),
         backgroundColor: const Color(0xFF4ECDC4),
         actions: [
           IconButton(
@@ -227,10 +227,56 @@ class _RippleScreenState extends State<RippleScreen> {
                               ],
                             ),
                           );
+                        } else if (value == 'unarchive') {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Unarchive Ripple'),
+                              content: const Text(
+                                'Are you sure you want to unarchive this ripple? It will appear back in the main ripple list.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel',
+                                      style:
+                                          TextStyle(color: Color(0xFF4ECDC4))),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    try {
+                                      await FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(widget.userId)
+                                          .collection('ripples')
+                                          .doc(docId)
+                                          .update({'isArchived': false});
+
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text("Ripple unarchived")),
+                                      );
+                                    } catch (e) {
+                                      debugPrint("Unarchive failed: $e");
+                                    }
+                                  },
+                                  child: const Text('Unarchive',
+                                      style: TextStyle(color: Colors.green)),
+                                ),
+                              ],
+                            ),
+                          );
                         }
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(value: 'view', child: Text('Edit')),
+                        if (!showArchived)
+                          const PopupMenuItem(
+                              value: 'view', child: Text('Edit')),
+                        if (showArchived)
+                          const PopupMenuItem(
+                              value: 'unarchive', child: Text('Unarchive')),
                         const PopupMenuItem(
                             value: 'delete', child: Text('Delete')),
                       ],
