@@ -29,6 +29,9 @@ class _AnxiousScreenState extends State<AnxiousScreen>
   bool _isBookmarked = false;
   bool _isSoundOn = true;
   bool _wasAllCompletedBefore = false;
+  Timer? _countdownTimer;
+  Duration? _timeLeft;
+  DateTime? _completionTime;
 
   @override
   void initState() {
@@ -48,6 +51,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _tabController.dispose();
     _confettiController.dispose();
     super.dispose();
@@ -59,6 +63,34 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     if (!status.isGranted) {
       await Permission.notification.request();
     }
+  }
+
+  Widget buildCountdownBanner() {
+    if (_timeLeft == null) return const SizedBox();
+
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final hours = twoDigits(_timeLeft!.inHours);
+    final minutes = twoDigits(_timeLeft!.inMinutes.remainder(60));
+
+    return Container(
+      width: double.infinity,
+      color: Colors.amber.shade100,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.timer, color: Colors.black87),
+          const SizedBox(width: 8),
+          Text(
+            'Come back in $hours:$minutes to restart your journey 🧘‍♀️',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget buildMeditationTab() {
@@ -132,8 +164,10 @@ class _AnxiousScreenState extends State<AnxiousScreen>
             ..clear()
             ..addAll(savedTasks.map(int.parse));
           _wasAllCompletedBefore = _completedTasks.length == 3;
+          _completionTime = savedTime;
+          _timeLeft = Duration(hours: 24) - now.difference(savedTime);
         });
-
+        startCountdown();
         return _completedTasks.length < 3; // ✅ INCOMPLETE
       }
 
@@ -148,6 +182,29 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     });
 
     return false;
+  }
+
+  void startCountdown() {
+    _countdownTimer?.cancel();
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      if (_completionTime == null) return;
+
+      final now = DateTime.now();
+      final diff =
+          _completionTime!.add(const Duration(hours: 24)).difference(now);
+
+      if (diff.isNegative) {
+        _countdownTimer?.cancel();
+        setState(() {
+          _timeLeft = null;
+        });
+      } else {
+        setState(() {
+          _timeLeft = diff;
+        });
+      }
+    });
   }
 
   // ✅ Save calm task completion
@@ -266,6 +323,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
       ),
       body: Column(
         children: [
+          buildCountdownBanner(),
           Expanded(
             child: TabBarView(
               controller: _tabController,
