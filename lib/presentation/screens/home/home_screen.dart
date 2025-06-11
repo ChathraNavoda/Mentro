@@ -384,10 +384,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     style: GoogleFonts.outfit(
                         fontSize: 20, fontWeight: FontWeight.w400),
                   ),
-                  ElevatedButton(
-                    onPressed: showTestNotification,
-                    child: Text('Show Notification'),
-                  )
                 ],
               ),
               const SizedBox(height: 24),

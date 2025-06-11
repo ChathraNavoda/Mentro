@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
 import 'package:mentro/core/services/notification/notification_service.dart';
+import 'package:mentro/core/services/notification/reminder_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -223,12 +224,12 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     await prefs.setString('completion_time_$uid', now);
 
     if (completedCount == 3) {
-      await NotificationService.cancelReminder();
+      await ReminderService.noReminder();
     } else if (completedCount > 0) {
-      await NotificationService.scheduleOneHourNudge();
-      await NotificationService.schedule8PMReminderIfNeeded(completedCount);
+      await ReminderService.oneHourReminder();
+      await ReminderService.daily8PMReminder(completedCount);
     } else {
-      await NotificationService.cancelReminder();
+      await ReminderService.noReminder();
     }
   }
 
