@@ -160,9 +160,11 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
         padding: const EdgeInsets.all(20.0),
         child: ListView(
           children: [
-            Text("How are you feeling?",
-                style: GoogleFonts.outfit(
-                    fontSize: 18, fontWeight: FontWeight.w500)),
+            Text(
+              "How are you feeling?",
+              style:
+                  GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 6),
             Text("Tap to select and double tap to unselect.",
                 style: GoogleFonts.outfit(

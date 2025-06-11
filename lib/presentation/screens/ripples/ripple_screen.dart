@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
@@ -60,7 +61,11 @@ class _RippleScreenState extends State<RippleScreen> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Authentication failed')),
+          SnackBar(
+              content: Text(
+            'Authentication failed',
+            style: GoogleFonts.outfit(),
+          )),
         );
       }
     } catch (e) {
@@ -89,12 +94,23 @@ class _RippleScreenState extends State<RippleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(showArchived ? "Archived Ripples" : "Your Ripples"),
+        title: Text(
+          showArchived ? "Archived Ripples" : "Your Ripples",
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: const Color(0xFF4ECDC4),
         actions: [
           IconButton(
-            icon: Icon(showArchived ? Icons.lock_open : Icons.lock),
+            icon: Icon(
+              showArchived ? Icons.lock_open : Icons.lock,
+              color: Colors.black,
+            ),
             tooltip: showArchived
                 ? "Hide Archived Ripples"
                 : "View Archived Ripples",
@@ -149,12 +165,19 @@ class _RippleScreenState extends State<RippleScreen> {
                   );
                 },
                 child: Card(
+                  color: Colors.white,
                   margin: const EdgeInsets.all(12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      width: 0,
+                      //color: Color(0xFF4ECDC4),
+                      color: Color.fromARGB(255, 0, 0, 0),
+                    ),
                   ),
-                  elevation: 4,
+                  elevation: 0,
                   child: ListTile(
+                    tileColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                     leading: CircleAvatar(
@@ -164,20 +187,29 @@ class _RippleScreenState extends State<RippleScreen> {
                     ),
                     title: Text(
                       emotion,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: GoogleFonts.outfit(
+                          fontSize: 18, fontWeight: FontWeight.w500),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(trigger),
+                        Text(
+                          trigger,
+                          style: GoogleFonts.outfit(
+                              fontSize: 15, fontWeight: FontWeight.w300),
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           DateFormat('MMMM dd, yyyy').format(date),
-                          style: const TextStyle(fontSize: 12),
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w300,
+                          ),
                         ),
                       ],
                     ),
                     trailing: PopupMenuButton<String>(
+                      color: Colors.white,
                       onSelected: (value) {
                         if (value == 'view') {
                           Navigator.push(
@@ -191,8 +223,14 @@ class _RippleScreenState extends State<RippleScreen> {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Delete Ripple',
-                                  style: TextStyle(color: Colors.red)),
+                              surfaceTintColor: Colors.white,
+                              title: Text(
+                                'Delete Ripple',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                               content: const Text(
                                 'Are you sure you want to delete this ripple? This action cannot be undone.',
                               ),
@@ -221,8 +259,13 @@ class _RippleScreenState extends State<RippleScreen> {
                                       debugPrint("Delete failed: $e");
                                     }
                                   },
-                                  child: const Text('Delete',
-                                      style: TextStyle(color: Colors.red)),
+                                  child: Text(
+                                    'Delete',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -232,15 +275,22 @@ class _RippleScreenState extends State<RippleScreen> {
                             context: context,
                             builder: (context) => AlertDialog(
                               title: const Text('Unarchive Ripple'),
-                              content: const Text(
+                              content: Text(
                                 'Are you sure you want to unarchive this ripple? It will appear back in the main ripple list.',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w300,
+                                ),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: const Text('Cancel',
-                                      style:
-                                          TextStyle(color: Color(0xFF4ECDC4))),
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.outfit(
+                                      color: Color(0xFF4ECDC4),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
                                 TextButton(
                                   onPressed: () async {
@@ -272,13 +322,31 @@ class _RippleScreenState extends State<RippleScreen> {
                       },
                       itemBuilder: (context) => [
                         if (!showArchived)
-                          const PopupMenuItem(
-                              value: 'view', child: Text('Edit')),
+                          PopupMenuItem(
+                            value: 'view',
+                            child: Text(
+                              'Edit',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.amber,
+                              ),
+                            ),
+                          ),
                         if (showArchived)
                           const PopupMenuItem(
                               value: 'unarchive', child: Text('Unarchive')),
-                        const PopupMenuItem(
-                            value: 'delete', child: Text('Delete')),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(
+                            'Delete',
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
