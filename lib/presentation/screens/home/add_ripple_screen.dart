@@ -63,42 +63,6 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
     }
   }
 
-  // void _saveRipple() async {
-  //   if (_selectedEmotion == null || _triggerController.text.trim().isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //           content: Text("Please select an emotion and enter a trigger.")),
-  //     );
-  //     return;
-  //   }
-
-  //   try {
-  //     final rippleData = {
-  //       'date': Timestamp.fromDate(_selectedDate),
-  //       'time': Timestamp.now(), // You can use this for sorting later
-  //       'emotion': _selectedEmotion,
-  //       'trigger': _triggerController.text.trim(),
-  //       'description': _descriptionController.text.trim(),
-  //       'tags': _tagsController.text
-  //           .split('#')
-  //           .map((tag) => tag.trim())
-  //           .where((tag) => tag.isNotEmpty)
-  //           .toList(),
-  //     };
-
-  //     await FirebaseFirestore.instance.collection('ripples').add(rippleData);
-
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Ripple added successfully!")),
-  //     );
-
-  //     Navigator.pop(context);
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Failed to add ripple: $e")),
-  //     );
-  //   }
-  // }
   void _saveRipple() async {
     if (_selectedEmotion == null || _triggerController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -163,8 +127,14 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
             Navigator.pop(context); // Goes back to Home
           },
         ),
-        title: Text("Add Ripple",
-            style: GoogleFonts.outfit(fontWeight: FontWeight.w500)),
+        title: Text(
+          "Add Ripple",
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today,
@@ -178,7 +148,9 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
               child: Text(
                 DateFormat('M/d/yy').format(_selectedDate),
                 style: GoogleFonts.outfit(
-                    fontSize: 14, color: const Color.fromARGB(255, 0, 0, 0)),
+                    fontSize: 16,
+                    color: const Color.fromARGB(255, 0, 0, 0),
+                    fontWeight: FontWeight.w500),
               ),
             ),
           )
@@ -190,7 +162,11 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
           children: [
             Text("How are you feeling?",
                 style: GoogleFonts.outfit(
-                    fontSize: 16, fontWeight: FontWeight.w500)),
+                    fontSize: 18, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 6),
+            Text("Tap to select and double tap to unselect.",
+                style: GoogleFonts.outfit(
+                    fontSize: 11, fontWeight: FontWeight.w500)),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -259,7 +235,7 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
             const SizedBox(height: 24),
             Text("How did it ripple into your day?",
                 style: GoogleFonts.outfit(
-                    fontSize: 16, fontWeight: FontWeight.w500)),
+                    fontSize: 18, fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             TextField(
               controller: _descriptionController,
@@ -290,8 +266,13 @@ class _AddRippleScreenState extends State<AddRippleScreen> {
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: _saveRipple,
-              label: Text("Save",
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+              label: Text(
+                "Save",
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
+                    color: Colors.white),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4ECDC4),
                 foregroundColor: Colors.white,
