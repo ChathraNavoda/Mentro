@@ -35,13 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   String averageMood = '';
   List<String> topMoods = [];
-  // @override
-  // void initState() {
-  //   init();
-  //   super.initState();
-  //   listenToMoodUpdates(); // real-time updates
-  //   checkCompletionReminder();
-  // }
+
   @override
   void initState() {
     super.initState();
@@ -296,15 +290,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   Widget buildMoodSuggestion(String mood) {
     final suggestions = {
       'happy':
-          "You're glowing! Keep the joy flowing – maybe share a ripple of kindness!",
+          "You're glowing! ✨ Keep the joy flowing – maybe share a ripple of kindness today!",
       'sad':
-          "It’s okay to feel sad. Try journaling or listening to your favorite music.",
+          "It’s okay to feel sad. 😔 Let’s do something gentle to help you heal. You’re not alone—I’ve got you. ❤️‍🩹",
       'angry':
-          "Take a few deep breaths. A quick walk might help you cool down.",
+          "Take a few deep breaths. 😤 Let’s step back and cool off—how about a short walk or some music?",
       'anxious':
-          "Pause for a second. A guided meditation or pet video might help.",
+          "Feeling overwhelmed? 😰 Let’s slow things down. A deep breath and a moment of stillness might help. 🧘",
       'neutral':
-          "Feeling meh? Let’s shake things up – maybe try something spontaneous!",
+          "Feeling meh? 😐 Let’s shake things up—maybe try something new or revisit a small joy you love!",
     };
 
     final suggestion = suggestions[mood.toLowerCase()] ?? '';
@@ -331,17 +325,23 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           } else {
             // You can add more conditions here for other moods
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('No screen for mood: $mood')),
+              SnackBar(
+                content: Text(
+                  'No screen for mood: $mood',
+                  style: GoogleFonts.outfit(fontSize: 15),
+                ),
+              ),
             );
           }
         },
         child: Card(
-          color: const Color(0xFFFAF9F6),
-          elevation: 2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          color: const Color.fromARGB(255, 255, 255, 255),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(width: 1, color: Color(0xFF4ECDC4))),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -376,13 +376,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 18),
                   Image.asset('assets/images/logo.png', scale: 1.2),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 18),
                   Text(
                     "How are you feeling today?",
                     style: GoogleFonts.outfit(
-                        fontSize: 20, fontWeight: FontWeight.w400),
+                        fontSize: 20, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -417,34 +417,55 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                 ),
               ),
-              const SizedBox(height: 35),
-              Text('Average Mood for Today',
-                  style: Theme.of(context).textTheme.titleMedium),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    children: topMoods
-                        .map((mood) => Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: buildMoodImage(mood, size: 48),
-                            ))
-                        .toList(),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Average Mood: $averageMood',
-                      style: Theme.of(context).textTheme.titleMedium,
+              const SizedBox(height: 30),
+              Text(
+                'Average Mood for Today',
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: topMoods
+                          .map((mood) => Padding(
+                                padding: const EdgeInsets.only(right: 40),
+                                child: buildMoodImage(mood, size: 55),
+                              ))
+                          .toList(),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            'Average Mood: ',
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            averageMood,
+                            style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF4ECDC4)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               buildMoodSuggestion(getSuggestionMood(averageMood)),
-              //
-              //
-              // 👈 Add this
-
+              const SizedBox(height: 20),
               if (showIncompleteBanner)
                 GestureDetector(
                   onTap: () {
