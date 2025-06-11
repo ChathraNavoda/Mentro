@@ -8,7 +8,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lottie/lottie.dart';
-import 'package:mentro/core/services/notification/notification_service.dart';
 import 'package:mentro/core/services/notification/reminder_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,8 +26,6 @@ class _AnxiousScreenState extends State<AnxiousScreen>
   late ConfettiController _confettiController;
   late TabController _tabController;
   final Set<int> _completedTasks = {};
-  bool _isBookmarked = false;
-  bool _isSoundOn = true;
   bool _wasAllCompletedBefore = false;
   Timer? _countdownTimer;
   Duration? _timeLeft;
@@ -44,7 +41,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
 
     // ✅ Check immediately and periodically every minute
     checkCompletionState();
-    Timer.periodic(const Duration(minutes: 1), (timer) {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
       checkCompletionState();
     });
@@ -72,21 +69,32 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final hours = twoDigits(_timeLeft!.inHours);
     final minutes = twoDigits(_timeLeft!.inMinutes.remainder(60));
+    final seconds = twoDigits(_timeLeft!.inSeconds.remainder(60));
 
     return Container(
       width: double.infinity,
-      color: Colors.amber.shade100,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.timer, color: Colors.black87),
+          const Icon(Icons.timer, color: Color(0xFF4ECDC4)),
           const SizedBox(width: 8),
           Text(
-            'Come back in $hours:$minutes to restart your journey 🧘‍♀️',
+            'Your journey will be restarted in',
             style: GoogleFonts.outfit(
               fontSize: 14,
               color: Colors.black87,
+            ),
+          ),
+          SizedBox(
+            width: 8,
+          ),
+          Text(
+            '$hours:$minutes:$seconds',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              color: const Color.fromARGB(224, 255, 13, 0),
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -107,46 +115,6 @@ class _AnxiousScreenState extends State<AnxiousScreen>
     );
   }
 
-  // Future<void> checkCompletionState() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final String? uid = FirebaseAuth.instance.currentUser?.uid;
-  //   if (uid == null || !mounted) return;
-
-  //   final savedTasks = prefs.getStringList('completed_tasks_$uid');
-  //   final timeString = prefs.getString('completion_time_$uid');
-
-  //   if (savedTasks != null && timeString != null) {
-  //     final savedTime = DateTime.parse(timeString);
-  //     final now = DateTime.now();
-
-  //     final isExpired = now.difference(savedTime).inHours >= 24;
-
-  //     final completedCount = savedTasks.length;
-
-  //     if (isExpired && completedCount < 3 && completedCount > 0) {
-  //       // ✅ Notify instantly if expired and incomplete
-  //       await NotificationService.showNotification(
-  //         title: 'Tasks Incomplete',
-  //         body:
-  //             'You haven’t completed your 3 calm tasks today. Time to check in!',
-  //       );
-
-  //       // Reset timer so we don’t show again immediately
-  //       await prefs.setString(
-  //         'completion_time_$uid',
-  //         now.toIso8601String(),
-  //       );
-  //     }
-
-  //     // Restore local UI state
-  //     setState(() {
-  //       _completedTasks
-  //         ..clear()
-  //         ..addAll(savedTasks.map(int.parse));
-  //       _wasAllCompletedBefore = completedCount == 3;
-  //     });
-  //   }
-  // }
   Future<bool> checkCompletionState() async {
     final prefs = await SharedPreferences.getInstance();
     final String? uid = FirebaseAuth.instance.currentUser?.uid;
@@ -311,20 +279,36 @@ class _AnxiousScreenState extends State<AnxiousScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Feeling Anxious?', style: GoogleFonts.outfit()),
-        backgroundColor: const Color(0xFF4ECDC4),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.self_improvement), text: 'Meditation'),
-            Tab(icon: Icon(Icons.air), text: 'Breathing'),
-            Tab(icon: Icon(Icons.accessibility_new), text: 'Yoga'),
-          ],
+        backgroundColor: const Color(0xFF4ECDC4), // ✅ AppBar only
+        iconTheme: const IconThemeData(color: Colors.black87),
+        title: Text(
+          'Feeling Anxious?',
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
         ),
+        elevation: 0,
       ),
       body: Column(
         children: [
-          buildCountdownBanner(),
+          TabBar(
+            controller: _tabController,
+            labelColor: const Color(0xFF4ECDC4),
+            unselectedLabelColor: Colors.black,
+            dividerColor: Colors.black87,
+            indicatorColor: const Color(0xFF4ECDC4),
+            unselectedLabelStyle:
+                GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w400),
+            labelStyle:
+                GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w400),
+            tabs: const [
+              Tab(icon: Icon(Icons.self_improvement_sharp), text: 'Meditation'),
+              Tab(icon: Icon(Icons.air), text: 'Breathing'),
+              Tab(icon: Icon(Icons.accessibility_new_rounded), text: 'Yoga'),
+            ],
+          ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -335,7 +319,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
               ],
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, color: Colors.black87),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -348,72 +332,27 @@ class _AnxiousScreenState extends State<AnxiousScreen>
                       fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                        color: Colors.black,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isBookmarked = !_isBookmarked;
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: buildStarConfetti(),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        _isSoundOn ? Icons.volume_up : Icons.volume_off,
-                        color: Colors.black,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isSoundOn = !_isSoundOn;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    NotificationService.showNotification(
-                      title: 'Test Notification',
-                      body: 'This is just a test 🎉',
-                    );
-                  },
-                  child: Text('Send Test Notification'),
-                ),
-                // ElevatedButton(
-                //   onPressed: () {
-                //     NotificationService.debugScheduledNotification();
-                //   },
-                //   child: Text('10s'),
-                // ),
-                // ElevatedButton(
-                //   onPressed: () async {
-                //     await _requestNotificationPermission();
-                //     await NotificationService.scheduleTestNotification();
-                //   },
-                //   child: Text('🔔 Schedule 10s Test Notification'),
-                // ),
+                Align(
+                    alignment: Alignment.topCenter, child: buildStarConfetti()),
+                buildCountdownBanner(),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back),
-                  label: Text('Back to Home', style: GoogleFonts.outfit()),
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  label: Text(
+                    'Back to Home',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4ECDC4),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
+                        borderRadius: BorderRadius.circular(24)),
                   ),
                 ),
               ],
@@ -430,7 +369,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
 class _MeditationWidget extends StatefulWidget {
   final VoidCallback onMeditationComplete;
 
-  const _MeditationWidget({super.key, required this.onMeditationComplete});
+  const _MeditationWidget({required this.onMeditationComplete});
 
   @override
   State<_MeditationWidget> createState() => _MeditationWidgetState();
@@ -468,7 +407,7 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
       _isPlaying = true;
       _completed = false;
       _showRestart = false;
-      _secondsLeft = 3;
+      _secondsLeft = 80;
     });
 
     final random = Random();
@@ -514,47 +453,68 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Lottie.asset(
-          'assets/lottie/meditation2.json',
-          height: 100,
-          repeat: _isPlaying,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          _completed ? 'Meditation Complete!' : 'Seconds Left: $_secondsLeft',
-          style: const TextStyle(fontSize: 24),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          _completed
-              ? 'Meditation Complete!'
-              : 'Close your eyes and listen to the music! 💆',
-          style: const TextStyle(fontSize: 16),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Time Left: $_secondsLeft sec',
-          style: const TextStyle(fontSize: 16),
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _isPlaying ? null : startMeditation,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4ECDC4),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+    return Center(
+      child: Column(
+        children: [
+          Lottie.asset(
+            'assets/lottie/meditation2.json',
+            height: 180,
+            repeat: _isPlaying,
+          ),
+          const SizedBox(height: 15),
+          Text(
+            _completed ? 'Meditation Complete!' : 'Seconds Left: $_secondsLeft',
+            style: GoogleFonts.outfit(fontSize: 20, color: Colors.black87),
+          ),
+          const SizedBox(height: 15),
+          Align(
+            alignment: Alignment.center,
+            child: Text(
+              _completed
+                  ? 'You did great!'
+                  : 'Close your eyes. Breathe in deeply. Let the music guide you. You are safe. You are calm. You are present.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                color: Colors.black87,
+                height: 1.5,
+              ),
             ),
           ),
-          child: Text(
-            _completed
-                ? (_showRestart ? 'Restart Meditation' : 'Meditation Complete!')
-                : 'Start Meditation',
+          const SizedBox(height: 20),
+          Text(
+            'Time Left: $_secondsLeft sec',
+            style: GoogleFonts.outfit(
+                fontSize: 16,
+                color: Color(0xFF4ECDC4),
+                fontWeight: FontWeight.w600),
           ),
-        ),
-      ],
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _isPlaying ? null : startMeditation,
+            style: ElevatedButton.styleFrom(
+              elevation: 0,
+              backgroundColor: const Color(0xFF4ECDC4),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            child: Text(
+              _completed
+                  ? (_showRestart
+                      ? 'Restart Meditation'
+                      : 'Meditation Complete!')
+                  : 'Start Meditation',
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -573,8 +533,8 @@ class BreathingTab extends StatefulWidget {
 class _BreathingTabState extends State<BreathingTab>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Timer _timer;
-  int _secondsLeft = 3;
+  Timer? _timer;
+  int _secondsLeft = 60;
   int _currentIndex = 0;
   bool _isPlaying = false;
   bool _completed = false;
@@ -591,7 +551,7 @@ class _BreathingTabState extends State<BreathingTab>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 5),
     );
   }
 
@@ -602,18 +562,18 @@ class _BreathingTabState extends State<BreathingTab>
       _isPlaying = true;
       _completed = false;
       _showRestart = false;
-      _secondsLeft = 3;
+      _secondsLeft = 60;
       _currentIndex = 0;
     });
 
     _controller.repeat(reverse: true);
 
-    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
 
       setState(() {
         _currentIndex = (_currentIndex + 1) % _breathingText.length;
-        _secondsLeft -= 4;
+        _secondsLeft -= 5;
       });
 
       if (_secondsLeft <= 0) {
@@ -640,7 +600,7 @@ class _BreathingTabState extends State<BreathingTab>
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -668,25 +628,17 @@ class _BreathingTabState extends State<BreathingTab>
         const SizedBox(height: 30),
         Text(
           _completed ? 'Breathing Complete!' : _breathingText[_currentIndex],
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontSize: 20, color: Colors.black87),
         ),
         const SizedBox(height: 16),
         Text(
           'Time Left: $_secondsLeft sec',
-          style: const TextStyle(fontSize: 16),
+          style: GoogleFonts.outfit(
+              fontSize: 16,
+              color: Color(0xFF4ECDC4),
+              fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 30),
-        // ElevatedButton(
-        //   onPressed: _isPlaying ? null : startBreathing,
-        //   style: ElevatedButton.styleFrom(
-        //     backgroundColor: const Color(0xFF4ECDC4),
-        //     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-        //     shape: RoundedRectangleBorder(
-        //       borderRadius: BorderRadius.circular(24),
-        //     ),
-        //   ),
-        //   child: Text(_completed ? 'Completed' : 'Start Breathing'),
-        // ),
         ElevatedButton(
           onPressed: _isPlaying
               ? null
@@ -704,6 +656,11 @@ class _BreathingTabState extends State<BreathingTab>
             _completed
                 ? (_showRestart ? 'Restart Breathing' : 'Completed')
                 : 'Start Breathing',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -741,22 +698,25 @@ class _YogaTabState extends State<YogaTab> {
   final List<YogaPose> poses = [
     YogaPose(
       name: "Cat-Cow Pose",
-      benefit: "Increases flexibility of the spine.",
-      duration: 3,
+      benefit:
+          "Improves spinal flexibility and posture while relieving back and neck tension.",
+      duration: 180,
       animationUrl:
           "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/cat_cow_pose.gif",
     ),
     YogaPose(
-      name: "Cat-Cow",
-      benefit: "Releases back tension and syncs breath.",
-      duration: 3,
+      name: "Child's Pose",
+      benefit:
+          "Gently stretches the back, hips, and thighs while calming the mind and relieving stress.",
+      duration: 180,
       animationUrl:
           "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/child_pose.gif",
     ),
     YogaPose(
-      name: "Legs Up the Wall",
-      benefit: "Improves blood flow and eases anxiety.",
-      duration: 3,
+      name: "Triangle Pose",
+      benefit:
+          "Strengthens legs and stretches the hips, spine, and chest while improving balance and digestion.",
+      duration: 180,
       animationUrl:
           "https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/gif/triangle_pose.gif",
     ),
@@ -841,31 +801,28 @@ class _YogaTabState extends State<YogaTab> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.network(pose.animationUrl),
-          const SizedBox(height: 20),
-          Text(
-            pose.name,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
+          const SizedBox(height: 15),
+          Text(pose.name,
+              style: GoogleFonts.outfit(fontSize: 20, color: Colors.black87)),
+          const SizedBox(height: 5),
+          Text(pose.benefit,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(fontSize: 14, color: Colors.black87)),
           const SizedBox(height: 10),
-          Text(
-            pose.benefit,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16),
-          ),
-          const SizedBox(height: 20),
           if (_allComplete)
-            const Text(
-              "🎉 Yoga Session Complete!",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              "Yoga Session Complete!",
+              style: GoogleFonts.outfit(fontSize: 20, color: Colors.black87),
             )
           else if (isStarted)
             Text(
-              isPoseComplete
-                  ? "✅ Pose Complete!"
-                  : "Time Left: $secondsLeft sec",
-              style: const TextStyle(fontSize: 18),
+              isPoseComplete ? "Pose Complete!" : "Time Left: $secondsLeft sec",
+              style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  color: Color(0xFF4ECDC4),
+                  fontWeight: FontWeight.w600),
             ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           ElevatedButton(
             onPressed: _allComplete
                 ? resetSession
@@ -883,6 +840,11 @@ class _YogaTabState extends State<YogaTab> {
                   : (isStarted
                       ? (isPoseComplete ? "Next Pose" : "In Progress...")
                       : "Start Pose"),
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
