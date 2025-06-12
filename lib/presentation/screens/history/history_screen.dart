@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:mentro/presentation/screens/ripples/view_ripple_screen.dart';
@@ -91,19 +92,33 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final userId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Ripple History"),
+        title: Text(
+          "Ripple History",
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: const Color(0xFF4ECDC4),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_alt),
+            icon: const Icon(
+              Icons.filter_alt,
+              color: Colors.black,
+            ),
             tooltip: 'Filter & Sort',
             onPressed: () {
               _showFilterDialog(context);
             },
           ),
           IconButton(
-            icon: Icon(showArchived ? Icons.lock_open : Icons.lock),
+            icon: Icon(
+              showArchived ? Icons.lock_open : Icons.lock,
+              color: Colors.black,
+            ),
             tooltip: showArchived
                 ? "Hide Archived Ripples"
                 : "View Archived Ripples",
@@ -170,10 +185,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   );
                 },
                 child: Card(
+                  color: Colors.white,
                   margin: const EdgeInsets.only(bottom: 16),
-                  elevation: 4,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      width: 0,
+                      color: Color.fromARGB(255, 0, 0, 0),
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -193,11 +213,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             Expanded(
                               child: Text(
                                 emotion,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF34495E),
-                                ),
+                                style: GoogleFonts.outfit(
+                                    fontSize: 18, fontWeight: FontWeight.w500),
                               ),
                             ),
                             if (isArchived)
@@ -207,15 +224,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const SizedBox(height: 12),
                         Text(
                           trigger,
-                          style: const TextStyle(fontSize: 16),
+                          style: GoogleFonts.outfit(
+                              fontSize: 15, fontWeight: FontWeight.w300),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           DateFormat('MMMM dd, yyyy').format(date),
-                          style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey,
-                              fontStyle: FontStyle.italic),
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w300,
+                          ),
                         ),
                       ],
                     ),
@@ -234,7 +252,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Filter Ripples"),
+          backgroundColor: Colors.white,
+          title: Text(
+            "Filter Ripples",
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -251,12 +275,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 items: ['All', 'Happy', 'Sad', 'Angry', 'Relaxed']
                     .map((e) => DropdownMenuItem(
                           value: e,
-                          child: Text(e),
+                          child: Text(
+                            e,
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ))
                     .toList(),
               ),
               const SizedBox(height: 10),
               SwitchListTile(
+                activeTrackColor: const Color(0xFF4ECDC4),
+                tileColor: Colors.white,
                 value: sortDescending,
                 onChanged: (val) {
                   setState(() {
@@ -264,7 +296,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   });
                   Navigator.pop(context);
                 },
-                title: const Text("Sort Newest First"),
+                title: Text(
+                  "Sort Newest First",
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
               ),
             ],
           ),

@@ -185,6 +185,7 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF4ECDC4),
         leading: IconButton(
