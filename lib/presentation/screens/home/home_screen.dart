@@ -5,8 +5,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/main.dart';
 import 'package:mentro/presentation/screens/home/add_ripple_screen.dart';
+import 'package:mentro/presentation/screens/home/emotions/angry_screen.dart';
 import 'package:mentro/presentation/screens/home/emotions/anxious_screen.dart';
 import 'package:mentro/presentation/screens/home/emotions/happy_screen.dart';
+import 'package:mentro/presentation/screens/home/emotions/neutral_screen.dart';
+import 'package:mentro/presentation/screens/home/emotions/sad_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart';
 import 'package:timezone/timezone.dart';
@@ -363,6 +366,23 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
+  Color _getRippleColor(String emotion) {
+    switch (emotion.toLowerCase()) {
+      case 'happy':
+        return const Color(0xFFEDEEA5);
+      case 'sad':
+        return const Color(0xFFBA90D0);
+      case 'angry':
+        return const Color(0xFFEF7A87);
+      case 'anxious':
+        return const Color(0xFFB9AA9D);
+      case 'neutral':
+        return const Color(0xFF8ECFE6);
+      default:
+        return const Color(0xFF4ECDC4); // fallback color
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -516,54 +536,106 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
+  void _navigateToEmotionScreen(String emotion) {
+    Widget? targetScreen;
+
+    switch (emotion) {
+      case 'anxious':
+        targetScreen = AnxiousScreen();
+        break;
+      case 'sad':
+        targetScreen = SadScreen();
+        break;
+      case 'angry':
+        targetScreen = AngryScreen();
+        break;
+      case 'happy':
+        targetScreen = HappyScreen();
+        break;
+      case 'neutral':
+        targetScreen = NeutralScreen();
+        break;
+      default:
+        targetScreen = null;
+    }
+
+    if (targetScreen != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => targetScreen!),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No screen for $emotion yet.')),
+      );
+    }
+  }
+
   Widget _buildEmotionPicker() {
-    final List<Map<String, dynamic>> emotions = [
-      {'name': 'Happy', 'image': 'assets/images/happy.png'},
-      {'name': 'Sad', 'image': 'assets/images/sad.png'},
-      {'name': 'Angry', 'image': 'assets/images/angry.png'},
-      {'name': 'Anxious', 'image': 'assets/images/anxious.png'},
-      {'name': 'Neutral', 'image': 'assets/images/neutral.png'},
+    final selectedMood = getSuggestionMood(averageMood);
+
+    final List<String> allEmotions = [
+      'anxious',
+      'angry',
+      'sad',
+      'neutral',
+      'happy'
     ];
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: emotions.map((emotion) {
-        return GestureDetector(
-          onTap: () {
-            // Navigate to emotion screen based on emotion['name']
-            if (emotion['name'].toLowerCase() == 'anxious') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => AnxiousScreen()),
-              );
-            }
-            // Add other emotion screens similarly here
-            else if (emotion['name'].toLowerCase() == 'happy') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => HappyScreen()),
-              );
-            }
-            // Add SadScreen, AngryScreen, NeutralScreen etc
-          },
-          child: Column(
-            children: [
-              Container(
-                height: 50,
-                width: 50,
-                padding: const EdgeInsets.all(6),
-                child: Image.asset(
-                  emotion['image'],
-                  fit: BoxFit.contain,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: allEmotions.map((emotion) {
+        final isSelected = emotion == selectedMood;
+        final rippleColor = _getRippleColor(emotion);
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(100),
+                splashColor: rippleColor.withOpacity(0.4),
+                onTap:
+                    isSelected ? () => _navigateToEmotionScreen(emotion) : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: rippleColor.withOpacity(0.6),
+                              spreadRadius: 4,
+                              blurRadius: 10,
+                            )
+                          ]
+                        : [],
+                  ),
+                  child: Opacity(
+                    opacity: isSelected ? 1.0 : 0.4,
+                    child: buildMoodImage(emotion, size: 50),
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                emotion['name'],
-                style: const TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              emotion[0].toUpperCase() + emotion.substring(1),
+              // style: TextStyle(
+              //   fontSize: 12,
+              //   fontWeight: FontWeight.w500,
+              //   color: isSelected ? rippleColor : Colors.grey,
+              // ),
+
+              style: GoogleFonts.outfit(
+                fontSize: 15,
+                color: isSelected ? rippleColor : Colors.black87,
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         );
       }).toList(),
     );
