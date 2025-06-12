@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DailyAnalysisScreen extends StatelessWidget {
   final int dayIndex;
@@ -71,7 +72,14 @@ class DailyAnalysisScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('$dayLabel Analysis'),
+        title: Text(
+          '$dayLabel Analysis',
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: const Color(0xFF4ECDC4),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -85,7 +93,10 @@ class DailyAnalysisScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Date: $date',
-                  style: Theme.of(context).textTheme.titleMedium),
+                  style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF4ECDC4))),
               const SizedBox(height: 16),
               Row(
                 children: [

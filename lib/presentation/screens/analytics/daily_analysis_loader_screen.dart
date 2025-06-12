@@ -1,140 +1,8 @@
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:flutter/material.dart';
-// import 'package:intl/intl.dart';
-// import 'package:mentro/presentation/screens/analytics/daily_analysis_screen.dart';
-
-// class DailyAnalysisLoaderScreen extends StatefulWidget {
-//   final DateTime selectedDate;
-
-//   const DailyAnalysisLoaderScreen({super.key, required this.selectedDate});
-
-//   @override
-//   State<DailyAnalysisLoaderScreen> createState() =>
-//       _DailyAnalysisLoaderScreenState();
-// }
-
-// class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
-//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     loadDailyData();
-//   }
-
-//   Future<void> loadDailyData() async {
-//     final start = DateTime(widget.selectedDate.year, widget.selectedDate.month,
-//         widget.selectedDate.day);
-//     final end = start.add(const Duration(days: 1));
-
-//     try {
-//       final snapshot = await _firestore
-//           .collection('ripples')
-//           .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-//           .where('date', isLessThan: Timestamp.fromDate(end))
-//           .get();
-
-//       final docs = snapshot.docs;
-
-//       if (docs.isEmpty) {
-//         if (mounted) {
-//           Navigator.pop(context);
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             const SnackBar(content: Text('No data found for this day.')),
-//           );
-//         }
-//         return;
-//       }
-
-//       List<Map<String, dynamic>> moodTimeline = [];
-//       List<Map<String, dynamic>> moodIntensityByTime = [];
-//       Map<String, int> emotionCount = {};
-//       Map<String, int> tagCount = {};
-
-//       for (var doc in docs) {
-//         final data = doc.data();
-//         final emotion = data['emotion'] ?? 'neutral';
-//         final time = (data['time'] as Timestamp).toDate();
-//         final tags = List<String>.from(data['tags'] ?? []);
-//         final timeStr = TimeOfDay.fromDateTime(time).format(context);
-
-//         moodTimeline.add({
-//           'time': timeStr,
-//           'emotion': emotion,
-//           'tag': tags.isNotEmpty ? tags.first : 'untagged',
-//         });
-
-//         moodIntensityByTime.add({
-//           'time': timeStr,
-//           'emotion': emotion,
-//           'intensity': 100.0,
-//         });
-
-//         emotionCount[emotion] = (emotionCount[emotion] ?? 0) + 1;
-
-//         for (var tag in tags) {
-//           tagCount[tag] = (tagCount[tag] ?? 0) + 1;
-//         }
-//       }
-
-//       String averageMood =
-//           emotionCount.entries.reduce((a, b) => a.value > b.value ? a : b).key;
-
-//       String mostCommonTag = tagCount.isNotEmpty
-//           ? tagCount.entries.reduce((a, b) => a.value > b.value ? a : b).key
-//           : 'none';
-
-//       int rippleCount = docs.length;
-
-//       if (mounted) {
-//         // Replace loader with analysis screen
-//         Navigator.pushReplacement(
-//           context,
-//           MaterialPageRoute(
-//             builder: (_) => DailyAnalysisScreen(
-//               date: DateFormat('yyyy-MM-dd').format(widget.selectedDate),
-//               averageMood: averageMood,
-//               mostCommonTag: mostCommonTag,
-//               rippleCount: rippleCount,
-//               moodTimeline: moodTimeline,
-//               moodIntensityByTime: moodIntensityByTime,
-//               dayIndex: widget.selectedDate.weekday % 7,
-//               dayLabel: DateFormat('EEEE').format(widget.selectedDate),
-//             ),
-//           ),
-//         );
-//       }
-//     } catch (e) {
-//       if (mounted) {
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text('Failed to load data: $e')),
-//         );
-//       }
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: const Color(0xFF4ECDC4),
-//         leading: IconButton(
-//           icon: const Icon(Icons.arrow_back),
-//           onPressed: () => Navigator.pop(context),
-//         ),
-//         title: const Text('Loading Analysis'),
-//       ),
-//       body: const Center(
-//         child: CircularProgressIndicator(),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class DailyAnalysisLoaderScreen extends StatefulWidget {
@@ -323,7 +191,14 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('$dayLabel Analysis'),
+        title: Text(
+          '$dayLabel Analysis',
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -333,24 +208,12 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Date: $date',
-                        style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Date: $date',
+                      style: GoogleFonts.outfit(
+                          fontSize: 20, fontWeight: FontWeight.w500),
+                    ),
                     const SizedBox(height: 16),
-                    // Row(
-                    //   crossAxisAlignment: CrossAxisAlignment.center,
-                    //   children: [
-                    //     ...topEmotionList.map((mood) => Padding(
-                    //           padding: const EdgeInsets.only(right: 8),
-                    //           child: buildMoodImage(mood, size: 48),
-                    //         )),
-                    //     Expanded(
-                    //       child: Text(
-                    //         'Average Mood: $averageMood',
-                    //         style: Theme.of(context).textTheme.titleMedium,
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -364,21 +227,76 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            'Average Mood: $averageMood',
-                            style: Theme.of(context).textTheme.titleMedium,
+                          child: Row(
+                            children: [
+                              Text(
+                                'Average Mood: ',
+                                style: GoogleFonts.outfit(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color.fromARGB(255, 0, 0, 0)),
+                              ),
+                              Text(
+                                averageMood,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400,
+                                  color: const Color(0xFF4ECDC4),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 8),
-                    Text('Most Common Tag: #$mostCommonTag'),
-                    Text('Ripple Count: $rippleCount'),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          'Most Common Tag: ',
+                          style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              color: const Color.fromARGB(255, 0, 0, 0)),
+                        ),
+                        Text(
+                          mostCommonTag,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF4ECDC4),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          'Ripple Count: ',
+                          style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              color: const Color.fromARGB(255, 0, 0, 0)),
+                        ),
+                        Text(
+                          '$rippleCount',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF4ECDC4),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
-                    const Text('Mood Breakdown',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      'Mood Breakdown',
+                      style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          color: const Color.fromARGB(255, 0, 0, 0)),
+                    ),
                     const SizedBox(height: 12),
                     ...moodTimeline.map((entry) {
                       final time = entry['time'] ?? 'N/A';
@@ -386,21 +304,41 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
                       final tag = entry['tag'] ?? 'untagged';
 
                       return ListTile(
-                        leading: Text(time),
+                        leading: Text(
+                          time,
+                          style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: const Color.fromARGB(255, 0, 0, 0)),
+                        ),
                         title: Row(
                           children: [
-                            buildMoodImage(emotion, size: 32),
+                            buildMoodImage(emotion, size: 40),
                             const SizedBox(width: 8),
-                            Text(emotion),
+                            Text(
+                              emotion,
+                              style: GoogleFonts.outfit(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  color: const Color.fromARGB(255, 0, 0, 0)),
+                            ),
                           ],
                         ),
-                        subtitle: Text('#$tag'),
+                        subtitle: Text(
+                          '#$tag',
+                          style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w300,
+                              color: const Color.fromARGB(255, 51, 50, 50)),
+                        ),
                       );
                     }),
                     const SizedBox(height: 24),
-                    const Text('Mood Intensity By Time',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      'Mood Intensity By Time',
+                      style: GoogleFonts.outfit(
+                          fontSize: 20, fontWeight: FontWeight.w500),
+                    ),
                     const SizedBox(height: 12),
                     AspectRatio(
                       aspectRatio: 1.2,
@@ -424,7 +362,12 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
                                         moodIntensityByTime[index]['time'],
                                         style: const TextStyle(fontSize: 10));
                                   }
-                                  return const Text('');
+                                  return Text(
+                                    '',
+                                    style: GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500),
+                                  );
                                 },
                               ),
                             ),
