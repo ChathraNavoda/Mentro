@@ -141,8 +141,14 @@ class _UpdateRippleScreenState extends State<UpdateRippleScreen> {
               icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () => Navigator.pop(context),
             ),
-            title: Text("Update Ripple",
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w500)),
+            title: Text(
+              "Update Ripple",
+              style: GoogleFonts.outfit(
+                fontSize: 22,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.calendar_today, color: Colors.black),
@@ -153,8 +159,10 @@ class _UpdateRippleScreenState extends State<UpdateRippleScreen> {
                 child: Center(
                   child: Text(
                     DateFormat('M/d/yy').format(_selectedDate),
-                    style:
-                        GoogleFonts.outfit(fontSize: 14, color: Colors.black),
+                    style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        color: const Color.fromARGB(255, 0, 0, 0),
+                        fontWeight: FontWeight.w500),
                   ),
                 ),
               )
@@ -164,9 +172,11 @@ class _UpdateRippleScreenState extends State<UpdateRippleScreen> {
             padding: const EdgeInsets.all(20.0),
             child: ListView(
               children: [
-                Text("How are you feeling?",
-                    style: GoogleFonts.outfit(
-                        fontSize: 16, fontWeight: FontWeight.w500)),
+                Text(
+                  "You are feeling...",
+                  style: GoogleFonts.outfit(
+                      fontSize: 18, fontWeight: FontWeight.w500),
+                ),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -266,8 +276,14 @@ class _UpdateRippleScreenState extends State<UpdateRippleScreen> {
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
                   onPressed: _updateRipple,
-                  label: Text("Update Ripple",
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+                  label: Text(
+                    "Update Ripple",
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4ECDC4),
                     foregroundColor: Colors.white,
