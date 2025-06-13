@@ -293,6 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
+                    backgroundColor: Colors.white,
                     title: Text(
                       "Confirm Logout",
                       style: GoogleFonts.outfit(
