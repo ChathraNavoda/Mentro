@@ -65,8 +65,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   height: height / 3.7,
                   width: double.infinity,
                   child: Image.asset(
-                    'assets/images/logo.png',
-                    scale: 1.5,
+                    'assets/images/logo3.png',
                   ),
                 ),
                 TextFieldInput(

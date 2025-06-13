@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/core/services/messaging/fcm_service.dart';
 import 'package:mentro/core/services/notification/notification_service.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
@@ -23,6 +24,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        textTheme: GoogleFonts.outfitTextTheme(Theme.of(context).textTheme),
+      ),
       navigatorObservers: [routeObserver],
       debugShowCheckedModeBanner: false,
       home: StreamBuilder(

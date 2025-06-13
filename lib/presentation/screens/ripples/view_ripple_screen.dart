@@ -69,7 +69,7 @@ class ViewRippleScreen extends StatelessWidget {
               Expanded(
                 child: SingleChildScrollView(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -149,77 +149,13 @@ class ViewRippleScreen extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 color: Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _BottomIconButton(
-                      icon: Icons.edit_square,
-                      label: 'Edit',
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/update',
-                            arguments: rippleId);
-                      },
-                      iconColor: const Color(0xFF4ECDC4),
-                    ),
-                    _BottomIconButton(
-                      icon: Icons.archive_outlined,
-                      label: 'Archive',
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Archive Ripple'),
-                            content: const Text(
-                                'Are you sure you want to archive this ripple?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Yes'),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (confirm == true) {
-                          try {
-                            await FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(userId)
-                                .collection('ripples')
-                                .doc(rippleId)
-                                .update({'isArchived': true});
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text("Ripple archived successfully")),
-                            );
-
-                            Navigator.pop(context);
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content:
-                                      Text("Failed to archive ripple: $e")),
-                            );
-                          }
-                        }
-                      },
-                      iconColor: const Color(0xFF4ECDC4),
-                    ),
-                    _BottomIconButton(
-                      icon: Icons.share_outlined,
-                      label: 'Share',
-                      onPressed: () {
-                        Share.share('$title\n\n$description');
-                      },
-                      iconColor: const Color(0xFF4ECDC4),
-                    ),
-                  ],
+                child: _BottomIconButton(
+                  icon: Icons.share_outlined,
+                  label: 'Share',
+                  onPressed: () {
+                    Share.share('$title\n\n$description');
+                  },
+                  iconColor: const Color(0xFF4ECDC4),
                 ),
               ),
             ],

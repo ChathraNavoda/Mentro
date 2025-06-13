@@ -237,9 +237,13 @@ class _RippleScreenState extends State<RippleScreen> {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: const Text('Cancel',
-                                      style:
-                                          TextStyle(color: Color(0xFF4ECDC4))),
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.outfit(
+                                      color: Color(0xFF4ECDC4),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
                                 TextButton(
                                   onPressed: () async {

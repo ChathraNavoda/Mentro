@@ -397,7 +397,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 18),
-                  Image.asset('assets/images/logo.png', scale: 1.2),
+                  Image.asset(
+                    'assets/images/logo3.png',
+                  ),
                   const SizedBox(height: 18),
                   Text(
                     "How are you feeling today?",
