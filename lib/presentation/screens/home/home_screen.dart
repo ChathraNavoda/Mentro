@@ -546,7 +546,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         targetScreen = AnxiousScreen();
         break;
       case 'sad':
-        targetScreen = SadScreen();
+        targetScreen = SadScreen(
+          onComplete: () {},
+        );
         break;
       case 'angry':
         targetScreen = AngryScreen();
