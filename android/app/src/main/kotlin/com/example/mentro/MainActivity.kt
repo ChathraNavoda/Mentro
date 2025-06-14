@@ -1,4 +1,4 @@
-package com.example.mentro
+package com.mentro.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

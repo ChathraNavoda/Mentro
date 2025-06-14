@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.mentro"> <!-- Replace with your actual package name -->
+    package="com.mentro.app"> <!-- Replace with your actual package name -->
 
     <!-- ✅ Required permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -42,7 +42,7 @@
             android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <category android:name="com.example.mentro" /> <!-- Replace if needed -->
+                <category android:name="com.mentro.app" /> <!-- Replace if needed -->
             </intent-filter>
         </receiver>
 

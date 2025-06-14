@@ -568,7 +568,7 @@ class _BreathingTabState extends State<BreathingTab>
 
     _controller.repeat(reverse: true);
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (!mounted) return;
 
       setState(() {

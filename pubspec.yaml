@@ -58,13 +58,13 @@ dependencies:
   
   get: ^4.7.2
   
- 
-
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.4
-  
+  rename: ^3.1.0
+
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true

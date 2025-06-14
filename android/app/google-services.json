@@ -7,17 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:194665787546:android:1d4e0972b41fe9b5c8ef23",
+        "mobilesdk_app_id": "1:194665787546:android:d15650ab2e079352c8ef23",
         "android_client_info": {
-          "package_name": "com.example.mentro"
+          "package_name": "com.mentro.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "194665787546-b2qlh5bq50mk7p4aajcaugkhk6fda8vp.apps.googleusercontent.com",
+          "client_id": "194665787546-1h1dthhgunl5u4b1cad13blbvg0gfhe3.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.mentro",
+            "package_name": "com.mentro.app",
             "certificate_hash": "90ef418eb60f3bf0894e775326823331e4f91e0e"
           }
         },

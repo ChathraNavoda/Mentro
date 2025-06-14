@@ -39,6 +39,7 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
     return Scaffold(
       body: pages[currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         currentIndex: currentIndex,
         onTap: (index) {
           setState(() {
