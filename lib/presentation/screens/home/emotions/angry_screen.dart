@@ -240,9 +240,9 @@ class _AngryScreenState extends State<AngryScreen>
                   isCompleted: _completedTasks.contains(1),
                 ),
                 CoolDownTask(
-                    // onComplete: () => _onTaskComplete(2),
-                    // isCompleted: _completedTasks.contains(2),
-                    ),
+                  onComplete: () => _onTaskComplete(2),
+                  isCompleted: _completedTasks.contains(2),
+                ),
               ],
             ),
           ),
@@ -253,7 +253,7 @@ class _AngryScreenState extends State<AngryScreen>
               children: [
                 Text(
                   allCompleted
-                      ? "🌟 You completed today’s anger release journey!"
+                      ? "You completed today’s anger release journey!"
                       : "Progress: ${_completedTasks.length}/3 tasks completed",
                   style: GoogleFonts.outfit(
                       fontSize: 16, fontWeight: FontWeight.w500),

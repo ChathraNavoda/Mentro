@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool showIncompleteBannerForAnxious = false;
   bool _wasBannerChecked = false;
   bool showIncompleteBannerForSad = false;
+  bool showIncompleteBannerForAngry = false;
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     if (ModalRoute.of(context)?.isCurrent == true && !_wasBannerChecked) {
       checkCompletionReminderForAnxious();
       checkCompletionReminderForSad();
-
+      checkCompletionReminderForAngry();
       _wasBannerChecked = true;
     }
   }
@@ -73,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void didPopNext() {
     showIncompleteBannerForSad = false;
 
+    showIncompleteBannerForAngry = false;
     // If coming back from another screen via Navigator.pop
     _wasBannerChecked = false; // reset flag to trigger check again
   }
@@ -153,6 +155,37 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     setState(() {
       showIncompleteBannerForSad = false;
+    });
+  }
+
+  Future<void> checkCompletionReminderForAngry() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+
+    final savedTasks = prefs.getStringList('angry_tasks_$uid');
+    final timeString = prefs.getString('angry_time_$uid');
+
+    if (savedTasks != null && timeString != null) {
+      final savedTime = DateTime.parse(timeString);
+      final now = DateTime.now();
+
+      if (now.difference(savedTime).inHours < 24) {
+        final completed = savedTasks.length;
+        if (completed > 0 && completed < 3) {
+          setState(() {
+            showIncompleteBannerForAngry = true;
+          });
+          return;
+        }
+      } else {
+        await prefs.remove('angry_tasks_$uid');
+        await prefs.remove('angry_time_$uid');
+      }
+    }
+
+    setState(() {
+      showIncompleteBannerForAngry = false;
     });
   }
 
@@ -607,6 +640,51 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           onPressed: () {
                             setState(() {
                               showIncompleteBannerForSad = false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (showIncompleteBannerForAngry)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AngryScreen(onComplete: () {})),
+                    ).then((_) {
+                      checkCompletionReminderForAngry(); // Recheck after returning
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(
+                          0xFFEF7A87), // light salmonish angry theme
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEF7A87)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            color: Color.fromARGB(255, 255, 255, 255)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "You haven't finished your Angry Healing Tasks today. Tap here to continue.",
+                            style: GoogleFonts.outfit(
+                                color: Color.fromARGB(255, 255, 255, 255)),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close,
+                              color: Color.fromARGB(255, 255, 255, 255)),
+                          onPressed: () {
+                            setState(() {
+                              showIncompleteBannerForAngry = false;
                             });
                           },
                         ),

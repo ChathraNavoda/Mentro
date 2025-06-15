@@ -160,7 +160,7 @@ class _PunchItOutTaskState extends State<PunchItOutTask>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("💣💥 BOOM!", style: TextStyle(fontSize: 60)),
+                const Text("💣💥 BOOM!", style: TextStyle(fontSize: 40)),
                 const SizedBox(height: 16),
                 Text("You punched it all out! 😤",
                     style: GoogleFonts.outfit(
