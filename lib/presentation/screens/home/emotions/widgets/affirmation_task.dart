@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AffirmationTask extends StatefulWidget {
   final VoidCallback onComplete;
@@ -19,7 +21,7 @@ class AffirmationTask extends StatefulWidget {
 }
 
 class _AffirmationTaskState extends State<AffirmationTask> {
-  static const int totalDuration = 10; // 10 seconds for demo
+  static const int totalDuration = 10; // adjust as needed
   int _secondsLeft = totalDuration;
   bool _isStarted = false;
   bool _completed = false;
@@ -30,9 +32,36 @@ class _AffirmationTaskState extends State<AffirmationTask> {
   @override
   void initState() {
     super.initState();
-    if (widget.isCompleted) {
-      _completed = true;
-      _showRestart = true;
+    loadProgress();
+  }
+
+  Future<void> loadProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final saved = prefs.getBool('sad_affirmation_done_$uid') ?? false;
+
+    setState(() {
+      _completed = saved || widget.isCompleted;
+      _showRestart = _completed;
+      _alreadyReported = _completed;
+    });
+  }
+
+  Future<void> saveProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      await prefs.setBool('sad_affirmation_done_$uid', true);
+    }
+  }
+
+  Future<void> resetProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      await prefs.remove('sad_affirmation_done_$uid');
     }
   }
 
@@ -44,6 +73,7 @@ class _AffirmationTaskState extends State<AffirmationTask> {
       _completed = false;
       _showRestart = false;
       _secondsLeft = totalDuration;
+      _alreadyReported = false;
     });
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -58,8 +88,9 @@ class _AffirmationTaskState extends State<AffirmationTask> {
         });
 
         if (!_alreadyReported) {
-          widget.onComplete(); // Report completion once
+          widget.onComplete(); // report to parent once
           _alreadyReported = true;
+          saveProgress();
         }
 
         Future.delayed(const Duration(seconds: 2), () {
@@ -67,6 +98,17 @@ class _AffirmationTaskState extends State<AffirmationTask> {
           setState(() => _showRestart = true);
         });
       }
+    });
+  }
+
+  void restartAffirmation() async {
+    await resetProgress();
+    setState(() {
+      _secondsLeft = totalDuration;
+      _completed = false;
+      _isStarted = false;
+      _showRestart = false;
+      _alreadyReported = false;
     });
   }
 
@@ -85,7 +127,7 @@ class _AffirmationTaskState extends State<AffirmationTask> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Lottie.asset(
-          'assets/lottie/affirmation.json', // or whatever path you use
+          'assets/lottie/affirmation.json',
           height: 200,
           width: 200,
           repeat: true,
@@ -109,7 +151,9 @@ class _AffirmationTaskState extends State<AffirmationTask> {
         ),
         const SizedBox(height: 24),
         ElevatedButton(
-          onPressed: _isStarted ? null : startAffirmation,
+          onPressed: _completed && _showRestart
+              ? restartAffirmation
+              : (_isStarted ? null : startAffirmation),
           style: ElevatedButton.styleFrom(
             elevation: 0,
             backgroundColor: const Color(0xFFBA90D0),

@@ -93,6 +93,8 @@ flutter:
     - assets/images/
     - assets/sounds/
     - assets/lottie/
+    - assets/sounds/punch1.mp3
+    - assets/sounds/punch2.mp3
   
   
 

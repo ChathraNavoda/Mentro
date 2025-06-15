@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -21,9 +22,7 @@ class NatureWalkTask extends StatefulWidget {
 }
 
 class _NatureWalkTaskState extends State<NatureWalkTask> {
-  static const int totalDuration = 3; // 10 minutes in seconds
-  static const String _prefsWalkCompletedKey = 'natureWalkTaskCompleted';
-
+  static const int totalDuration = 3; // use 600 for 10 mins
   int _secondsLeft = totalDuration;
   bool _isStarted = false;
   bool _completed = false;
@@ -31,15 +30,21 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
   Timer? _timer;
   bool _alreadyReported = false;
 
+  String? _userKey;
+
   @override
   void initState() {
     super.initState();
-    _loadCompletionState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      _userKey = 'natureWalkTaskCompleted_$uid';
+      _loadCompletionState();
+    }
   }
 
   Future<void> _loadCompletionState() async {
     final prefs = await SharedPreferences.getInstance();
-    final completed = prefs.getBool(_prefsWalkCompletedKey) ?? false;
+    final completed = prefs.getBool(_userKey!) ?? false;
 
     setState(() {
       _completed = completed;
@@ -54,11 +59,20 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
 
   Future<void> _saveCompletionState(bool completed) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_prefsWalkCompletedKey, completed);
+    if (_userKey != null) {
+      await prefs.setBool(_userKey!, completed);
+    }
+  }
+
+  Future<void> _resetCompletionState() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_userKey != null) {
+      await prefs.remove(_userKey!);
+    }
   }
 
   void startWalk() {
-    if (_isStarted) return;
+    if (_isStarted || _userKey == null) return;
 
     setState(() {
       _isStarted = true;
@@ -94,7 +108,8 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
     });
   }
 
-  void _restartWalk() {
+  void _restartWalk() async {
+    await _resetCompletionState();
     _timer?.cancel();
     setState(() {
       _secondsLeft = totalDuration;
@@ -103,7 +118,6 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
       _isStarted = false;
       _alreadyReported = false;
     });
-    _saveCompletionState(false);
   }
 
   @override
@@ -121,7 +135,7 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Lottie.asset(
-          'assets/lottie/nature_park.json', // or whatever path you use
+          'assets/lottie/nature_park.json',
           height: 270,
           width: 270,
           repeat: true,
