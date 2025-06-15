@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:simple_ripple_animation/simple_ripple_animation.dart';
 
@@ -64,102 +65,166 @@ class ViewRippleScreen extends StatelessWidget {
             centerTitle: true,
             backgroundColor: const Color(0xFF4ECDC4),
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      RippleAnimation(
-                        repeat: true,
-                        color: rippleColor,
-                        minRadius: 60,
-                        ripplesCount: 6,
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundImage: AssetImage(emotionImage),
-                          backgroundColor: Colors.transparent,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        emotion,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF4ECDC4),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        formattedDate,
-                        style: const TextStyle(
-                            fontSize: 16, color: Colors.black54),
-                      ),
-                      Text(
-                        formattedTime,
-                        style: const TextStyle(
-                            fontSize: 16, color: Colors.black54),
-                      ),
-                      const SizedBox(height: 24),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          description,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (tags.isNotEmpty)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: tags
-                                .map((tag) => Chip(
-                                      label: Text("#$tag"),
-                                      backgroundColor: const Color(0xFF4ECDC4),
-                                      labelStyle: const TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(
+          body: Column(children: [
+            Expanded(
+              child: SingleChildScrollView(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                color: Colors.white,
-                child: _BottomIconButton(
-                  icon: Icons.share_outlined,
-                  label: 'Share',
-                  onPressed: () {
-                    Share.share('$title\n\n$description');
-                  },
-                  iconColor: const Color(0xFF4ECDC4),
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    RippleAnimation(
+                      repeat: true,
+                      color: rippleColor,
+                      minRadius: 60,
+                      ripplesCount: 6,
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundImage: AssetImage(emotionImage),
+                        backgroundColor: Colors.transparent,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      emotion,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF4ECDC4),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      formattedDate,
+                      style:
+                          const TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+                    Text(
+                      formattedTime,
+                      style:
+                          const TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 24),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        description,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (tags.isNotEmpty)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: tags
+                              .map((tag) => Chip(
+                                    label: Text("#$tag"),
+                                    backgroundColor: const Color(0xFF4ECDC4),
+                                    labelStyle: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _BottomIconButton(
+                    icon: Icons.edit_square,
+                    label: 'Edit',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              UpdateRippleScreen(rippleId: rippleId),
+                        ),
+                      );
+                    },
+                    iconColor: const Color(0xFF4ECDC4),
+                  ),
+                  _BottomIconButton(
+                    icon: Icons.archive_outlined,
+                    label: 'Archive',
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Archive Ripple'),
+                          content: const Text(
+                              'Are you sure you want to archive this ripple?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Yes'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        try {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(userId)
+                              .collection('ripples')
+                              .doc(rippleId)
+                              .update({'isArchived': true});
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Ripple archived successfully")),
+                          );
+
+                          Navigator.pop(context);
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text("Failed to archive ripple: $e")),
+                          );
+                        }
+                      }
+                    },
+                    iconColor: const Color(0xFF4ECDC4),
+                  ),
+                  _BottomIconButton(
+                    icon: Icons.share_outlined,
+                    label: 'Share',
+                    onPressed: () {
+                      Share.share('$title\n\n$description');
+                    },
+                    iconColor: const Color(0xFF4ECDC4),
+                  ),
+                ],
+              ),
+            )
+          ]),
         );
       },
     );

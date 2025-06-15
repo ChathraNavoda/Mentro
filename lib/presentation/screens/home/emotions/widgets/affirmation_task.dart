@@ -3,27 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class NatureWalkTask extends StatefulWidget {
-  final VoidCallback onWalkComplete;
+class AffirmationTask extends StatefulWidget {
   final VoidCallback onComplete;
+  final bool isCompleted;
 
-  const NatureWalkTask({
+  const AffirmationTask({
     super.key,
-    required this.onWalkComplete,
     required this.onComplete,
-    required bool isCompleted,
+    required this.isCompleted,
   });
 
   @override
-  State<NatureWalkTask> createState() => _NatureWalkTaskState();
+  State<AffirmationTask> createState() => _AffirmationTaskState();
 }
 
-class _NatureWalkTaskState extends State<NatureWalkTask> {
-  static const int totalDuration = 3; // 10 minutes in seconds
-  static const String _prefsWalkCompletedKey = 'natureWalkTaskCompleted';
-
+class _AffirmationTaskState extends State<AffirmationTask> {
+  static const int totalDuration = 10; // 10 seconds for demo
   int _secondsLeft = totalDuration;
   bool _isStarted = false;
   bool _completed = false;
@@ -34,30 +30,13 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
   @override
   void initState() {
     super.initState();
-    _loadCompletionState();
+    if (widget.isCompleted) {
+      _completed = true;
+      _showRestart = true;
+    }
   }
 
-  Future<void> _loadCompletionState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final completed = prefs.getBool(_prefsWalkCompletedKey) ?? false;
-
-    setState(() {
-      _completed = completed;
-      _showRestart = completed;
-      if (completed) {
-        _secondsLeft = 0;
-        _isStarted = false;
-        _alreadyReported = true;
-      }
-    });
-  }
-
-  Future<void> _saveCompletionState(bool completed) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_prefsWalkCompletedKey, completed);
-  }
-
-  void startWalk() {
+  void startAffirmation() {
     if (_isStarted) return;
 
     setState(() {
@@ -65,7 +44,6 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
       _completed = false;
       _showRestart = false;
       _secondsLeft = totalDuration;
-      _alreadyReported = false;
     });
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -80,10 +58,8 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
         });
 
         if (!_alreadyReported) {
-          widget.onWalkComplete();
-          widget.onComplete();
+          widget.onComplete(); // Report completion once
           _alreadyReported = true;
-          _saveCompletionState(true);
         }
 
         Future.delayed(const Duration(seconds: 2), () {
@@ -92,18 +68,6 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
         });
       }
     });
-  }
-
-  void _restartWalk() {
-    _timer?.cancel();
-    setState(() {
-      _secondsLeft = totalDuration;
-      _completed = false;
-      _showRestart = false;
-      _isStarted = false;
-      _alreadyReported = false;
-    });
-    _saveCompletionState(false);
   }
 
   @override
@@ -121,32 +85,31 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Lottie.asset(
-          'assets/lottie/nature_park.json', // or whatever path you use
-          height: 270,
-          width: 270,
+          'assets/lottie/affirmation.json', // or whatever path you use
+          height: 200,
+          width: 200,
           repeat: true,
           fit: BoxFit.contain,
         ),
         const SizedBox(height: 20),
         Text(
-          _completed ? "Walk Complete!" : "Time Left: $mins:$secs",
+          _completed ? "You're Amazing!" : "Time Left: $mins:$secs",
           style: GoogleFonts.outfit(fontSize: 24, color: Colors.black87),
         ),
         const SizedBox(height: 16),
         Text(
           _completed
-              ? "Nature is healing 🌿"
-              : "Walk slowly. Breathe deeply. Let your thoughts go. Feel the earth beneath you.",
+              ? "Positive vibes completed.! 🎉"
+              : "Repeat after me:\n“I am worthy. I am healing. I am enough.”",
           textAlign: TextAlign.center,
-          style: GoogleFonts.outfit(fontSize: 16, color: Colors.black87),
+          style: GoogleFonts.outfit(
+            fontSize: 16,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 24),
         ElevatedButton(
-          onPressed: _isStarted
-              ? null
-              : _completed && _showRestart
-                  ? _restartWalk
-                  : startWalk,
+          onPressed: _isStarted ? null : startAffirmation,
           style: ElevatedButton.styleFrom(
             elevation: 0,
             backgroundColor: const Color(0xFFBA90D0),
@@ -157,8 +120,8 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
           ),
           child: Text(
             _completed
-                ? (_showRestart ? 'Restart Walk' : 'Walk Complete!')
-                : 'Start 10-Min Walk',
+                ? (_showRestart ? 'Restart Affirmations' : 'Affirmation Done!')
+                : 'Start Affirmations',
             style: GoogleFonts.outfit(
               fontSize: 14,
               color: Colors.white,

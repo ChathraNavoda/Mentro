@@ -210,7 +210,7 @@ class _RippleScreenState extends State<RippleScreen> {
                     ),
                     trailing: PopupMenuButton<String>(
                       color: Colors.white,
-                      onSelected: (value) {
+                      onSelected: (value) async {
                         if (value == 'view') {
                           Navigator.push(
                             context,
@@ -219,6 +219,59 @@ class _RippleScreenState extends State<RippleScreen> {
                                   UpdateRippleScreen(rippleId: docId),
                             ),
                           );
+                        } else if (value == 'archive') {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Archive Ripple'),
+                              content: Text(
+                                'Are you sure you want to archive this ripple?',
+                                style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.w300),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.outfit(
+                                      color: Color(0xFF4ECDC4),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text(
+                                    'Yes',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.teal,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirm == true) {
+                            try {
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(widget.userId)
+                                  .collection('ripples')
+                                  .doc(docId)
+                                  .update({'isArchived': true});
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text("Ripple archived")),
+                              );
+                            } catch (e) {
+                              debugPrint("Archive failed: $e");
+                            }
+                          }
                         } else if (value == 'delete') {
                           showDialog(
                             context: context,
@@ -334,6 +387,18 @@ class _RippleScreenState extends State<RippleScreen> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.amber,
+                              ),
+                            ),
+                          ),
+                        if (!showArchived)
+                          PopupMenuItem(
+                            value: 'archive',
+                            child: Text(
+                              'Archive',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.teal,
                               ),
                             ),
                           ),

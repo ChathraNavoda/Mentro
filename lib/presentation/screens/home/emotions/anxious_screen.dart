@@ -77,7 +77,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.timer, color: Color(0xFF4ECDC4)),
+          const Icon(Icons.timer, color: Color(0xFFB9AA9D)),
           const SizedBox(width: 8),
           Text(
             'Your journey will be restarted in',
@@ -279,7 +279,7 @@ class _AnxiousScreenState extends State<AnxiousScreen>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4ECDC4), // ✅ AppBar only
+        backgroundColor: const Color(0xFFB9AA9D), // ✅ AppBar only
         iconTheme: const IconThemeData(color: Colors.black87),
         title: Text(
           'Feeling Anxious?',
@@ -295,10 +295,10 @@ class _AnxiousScreenState extends State<AnxiousScreen>
         children: [
           TabBar(
             controller: _tabController,
-            labelColor: const Color(0xFF4ECDC4),
+            labelColor: const Color(0xFFB9AA9D),
             unselectedLabelColor: Colors.black,
             dividerColor: Colors.black87,
-            indicatorColor: const Color(0xFF4ECDC4),
+            indicatorColor: const Color(0xFFB9AA9D),
             unselectedLabelStyle:
                 GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w400),
             labelStyle:
@@ -348,7 +348,8 @@ class _AnxiousScreenState extends State<AnxiousScreen>
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4ECDC4),
+                    elevation: 0,
+                    backgroundColor: const Color(0xFFB9AA9D),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -486,7 +487,7 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
             'Time Left: $_secondsLeft sec',
             style: GoogleFonts.outfit(
                 fontSize: 16,
-                color: Color(0xFF4ECDC4),
+                color: Color(0xFFB9AA9D),
                 fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 20),
@@ -494,7 +495,7 @@ class _MeditationWidgetState extends State<_MeditationWidget> {
             onPressed: _isPlaying ? null : startMeditation,
             style: ElevatedButton.styleFrom(
               elevation: 0,
-              backgroundColor: const Color(0xFF4ECDC4),
+              backgroundColor: const Color(0xFFB9AA9D),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
@@ -635,7 +636,7 @@ class _BreathingTabState extends State<BreathingTab>
           'Time Left: $_secondsLeft sec',
           style: GoogleFonts.outfit(
               fontSize: 16,
-              color: Color(0xFF4ECDC4),
+              color: Color(0xFFB9AA9D),
               fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 30),
@@ -646,7 +647,8 @@ class _BreathingTabState extends State<BreathingTab>
                   ? startBreathing // restart
                   : startBreathing, // first time
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4ECDC4),
+            elevation: 0,
+            backgroundColor: const Color(0xFFB9AA9D),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
@@ -819,7 +821,7 @@ class _YogaTabState extends State<YogaTab> {
               isPoseComplete ? "Pose Complete!" : "Time Left: $secondsLeft sec",
               style: GoogleFonts.outfit(
                   fontSize: 16,
-                  color: Color(0xFF4ECDC4),
+                  color: Color(0xFFB9AA9D),
                   fontWeight: FontWeight.w600),
             ),
           const SizedBox(height: 10),
@@ -828,7 +830,8 @@ class _YogaTabState extends State<YogaTab> {
                 ? resetSession
                 : (isStarted ? (isPoseComplete ? nextPose : null) : startPose),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4ECDC4),
+              elevation: 0,
+              backgroundColor: const Color(0xFFB9AA9D),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),

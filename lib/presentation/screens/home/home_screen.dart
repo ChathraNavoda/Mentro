@@ -22,8 +22,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
-  bool showIncompleteBanner = false;
+  bool showIncompleteBannerForAnxious = false;
   bool _wasBannerChecked = false;
+  bool showIncompleteBannerForSad = false;
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -45,7 +46,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     init();
     listenToMoodUpdates();
-    checkCompletionReminder();
+    checkCompletionReminderForAnxious();
+    checkCompletionReminderForSad();
   }
 
   @override
@@ -54,7 +56,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     routeObserver.subscribe(this, ModalRoute.of(context)!);
     // This ensures the check runs every time the user returns to the Home tab
     if (ModalRoute.of(context)?.isCurrent == true && !_wasBannerChecked) {
-      checkCompletionReminder();
+      checkCompletionReminderForAnxious();
+      checkCompletionReminderForSad();
+
       _wasBannerChecked = true;
     }
   }
@@ -67,13 +71,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
+    showIncompleteBannerForSad = false;
+
     // If coming back from another screen via Navigator.pop
     _wasBannerChecked = false; // reset flag to trigger check again
   }
 
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      checkCompletionReminder(); // Check again when user comes back to Home tab
+      checkCompletionReminderForAnxious(); // Check again when user comes back to Home tab
     }
   }
 
@@ -88,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     await notificationsPlugin.initialize(initializationSettings);
   }
 
-  Future<void> checkCompletionReminder() async {
+  Future<void> checkCompletionReminderForAnxious() async {
     final prefs = await SharedPreferences.getInstance();
     final String? uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || !mounted) return;
@@ -104,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         final wasAllCompleted = savedTasks.length == 3;
         if (!wasAllCompleted) {
           setState(() {
-            showIncompleteBanner = true;
+            showIncompleteBannerForAnxious = true;
           });
           return;
         }
@@ -115,7 +121,38 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
 
     setState(() {
-      showIncompleteBanner = false;
+      showIncompleteBannerForAnxious = false;
+    });
+  }
+
+  Future<void> checkCompletionReminderForSad() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+
+    final savedTasks = prefs.getStringList('sad_tasks_$uid');
+    final timeString = prefs.getString('sad_time_$uid');
+
+    if (savedTasks != null && timeString != null) {
+      final savedTime = DateTime.parse(timeString);
+      final now = DateTime.now();
+
+      if (now.difference(savedTime).inHours < 24) {
+        final completed = savedTasks.length;
+        if (completed > 0 && completed < 3) {
+          setState(() {
+            showIncompleteBannerForSad = true;
+          });
+          return;
+        }
+      } else {
+        await prefs.remove('sad_tasks_$uid');
+        await prefs.remove('sad_time_$uid');
+      }
+    }
+
+    setState(() {
+      showIncompleteBannerForSad = false;
     });
   }
 
@@ -488,42 +525,88 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               ),
               buildMoodSuggestion(getSuggestionMood(averageMood)),
               const SizedBox(height: 20),
-              if (showIncompleteBanner)
+              if (showIncompleteBannerForAnxious)
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => AnxiousScreen()),
                     ).then((_) {
-                      checkCompletionReminder(); // Recheck when coming back
+                      checkCompletionReminderForAnxious(); // Recheck when coming back
                     });
                   },
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3CD),
+                      color: const Color(0xFFB9AA9D),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFFFEEBA)),
+                      border: Border.all(color: const Color(0xFFB9AA9D)),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.warning_amber_rounded,
-                            color: Color(0xFF856404)),
+                            color: Color.fromARGB(255, 255, 255, 255)),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             "You haven't completed all your tasks today. Tap here to finish them!",
                             style: GoogleFonts.outfit(
-                                color: const Color(0xFF856404)),
+                                color:
+                                    const Color.fromARGB(255, 255, 255, 255)),
                           ),
                         ),
                         IconButton(
-                          icon:
-                              const Icon(Icons.close, color: Color(0xFF856404)),
+                          icon: const Icon(Icons.close,
+                              color: Color.fromARGB(255, 255, 255, 255)),
                           onPressed: () {
                             setState(() {
-                              showIncompleteBanner = false;
+                              showIncompleteBannerForAnxious = false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (showIncompleteBannerForSad)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SadScreen(onComplete: () {})),
+                    ).then((_) {
+                      checkCompletionReminderForSad(); // Recheck after return
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFBA90D0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFBA90D0)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            color: Color.fromARGB(255, 255, 255, 255)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "You haven't finished your Sad Healing Tasks today. Tap here to continue.",
+                            style: GoogleFonts.outfit(
+                                color:
+                                    const Color.fromARGB(255, 255, 255, 255)),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close,
+                              color: Color.fromARGB(255, 255, 255, 255)),
+                          onPressed: () {
+                            setState(() {
+                              showIncompleteBannerForSad = false;
                             });
                           },
                         ),
