@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -94,6 +98,31 @@ class _DrawMoodTaskState extends State<DrawMoodTask> {
     widget.onDrawingStateChanged?.call(false);
   }
 
+  Future<void> saveDrawingToGallery(
+      Uint8List imageBytes, BuildContext context) async {
+    final dir =
+        await getExternalStorageDirectory(); // App-specific external dir
+    final drawingsDir = Directory('${dir!.path}/Pictures/Mentro/Drawings');
+
+    if (!await drawingsDir.exists()) {
+      await drawingsDir.create(recursive: true);
+    }
+
+    final filename = 'drawing_${DateTime.now().millisecondsSinceEpoch}.png';
+    final file = File('${drawingsDir.path}/$filename');
+
+    await file.writeAsBytes(imageBytes);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Drawing saved at: ${file.path}'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+
+    print('✅ Drawing saved at: ${file.path}');
+  }
+
   void _takeScreenshot() async {
     final image = await _screenshotController.capture(pixelRatio: 3.0);
     if (image == null) return;
@@ -112,8 +141,29 @@ class _DrawMoodTaskState extends State<DrawMoodTask> {
             child: Image.memory(image),
           ),
           actions: [
+            TextButton.icon(
+              onPressed: () async {
+                await saveDrawingToGallery(image, context);
+                Navigator.of(context).pop(); // Close after saving
+              },
+              icon: Icon(Icons.download),
+              label: Text(
+                'Download',
+                style: GoogleFonts.outfit(
+                  color: Color(0xFF4ECDC4),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            SizedBox(width: 80),
             TextButton(
-              child: const Text('Close'),
+              child: Text(
+                'Close',
+                style: GoogleFonts.outfit(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
