@@ -240,9 +240,9 @@ class _HappyScreenState extends State<HappyScreen>
                   isCompleted: _completedTasks.contains(0),
                 ),
                 KindnessBombTask(
-                    // onComplete: () => _onTaskComplete(1),
-                    // isCompleted: _completedTasks.contains(1),
-                    ),
+                  onComplete: () => _onTaskComplete(1),
+                  isCompleted: _completedTasks.contains(1),
+                ),
                 HighlightReelTask(
                     // onComplete: () => _onTaskComplete(2),
                     // isCompleted: _completedTasks.contains(2),
