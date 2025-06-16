@@ -20,6 +20,8 @@ class NeutralScreen extends StatefulWidget {
 
 class _NeutralScreenState extends State<NeutralScreen>
     with SingleTickerProviderStateMixin {
+  bool isDrawingActive = false;
+
   late ConfettiController _confettiController;
   late TabController _tabController;
   Set<int> _completedTasks = {};
@@ -222,6 +224,9 @@ class _NeutralScreenState extends State<NeutralScreen>
           Expanded(
             child: TabBarView(
               controller: _tabController,
+              physics: isDrawingActive
+                  ? const NeverScrollableScrollPhysics()
+                  : const AlwaysScrollableScrollPhysics(),
               children: [
                 SpinWheelTask(
                   onComplete: () => _onTaskComplete(0),
@@ -234,6 +239,11 @@ class _NeutralScreenState extends State<NeutralScreen>
                 DrawMoodTask(
                   onComplete: () => _onTaskComplete(2),
                   isCompleted: _completedTasks.contains(2),
+                  onDrawingStateChanged: (bool isDrawing) {
+                    setState(() {
+                      isDrawingActive = isDrawing;
+                    });
+                  },
                 ),
               ],
             ),

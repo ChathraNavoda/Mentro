@@ -6,14 +6,17 @@ import 'package:screenshot/screenshot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DrawMoodTask extends StatefulWidget {
-  final VoidCallback onComplete;
-  final bool isCompleted;
+  final ValueChanged<bool>? onDrawingStateChanged;
 
   const DrawMoodTask({
     Key? key,
     required this.onComplete,
     required this.isCompleted,
+    this.onDrawingStateChanged,
   }) : super(key: key);
+
+  final VoidCallback onComplete;
+  final bool isCompleted;
 
   @override
   State<DrawMoodTask> createState() => _DrawMoodTaskState();
@@ -62,7 +65,10 @@ class _DrawMoodTaskState extends State<DrawMoodTask> {
     if (uid != null) await prefs.setBool('neutral_draw_done_$uid', true);
   }
 
-  void _startDrawing() => setState(() => _isDrawing = true);
+  void _startDrawing() {
+    setState(() => _isDrawing = true);
+    widget.onDrawingStateChanged?.call(true);
+  }
 
   void _finishDrawing() {
     if (_points.isNotEmpty) {
@@ -72,6 +78,7 @@ class _DrawMoodTaskState extends State<DrawMoodTask> {
         _isCompleted = true;
         _isDrawing = false;
       });
+      widget.onDrawingStateChanged?.call(false);
       widget.onComplete();
     }
   }
@@ -84,6 +91,7 @@ class _DrawMoodTaskState extends State<DrawMoodTask> {
       _isDrawing = false;
       _isCompleted = false;
     });
+    widget.onDrawingStateChanged?.call(false);
   }
 
   void _takeScreenshot() async {

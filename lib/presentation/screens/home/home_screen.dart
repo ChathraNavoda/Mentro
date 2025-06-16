@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _wasBannerChecked = false;
   bool showIncompleteBannerForSad = false;
   bool showIncompleteBannerForAngry = false;
+  bool showIncompleteBannerForNeutral = false;
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -60,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       checkCompletionReminderForAnxious();
       checkCompletionReminderForSad();
       checkCompletionReminderForAngry();
+      checkCompletionReminderForNeutral();
       _wasBannerChecked = true;
     }
   }
@@ -75,7 +77,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     showIncompleteBannerForSad = false;
 
     showIncompleteBannerForAngry = false;
-    // If coming back from another screen via Navigator.pop
+    showIncompleteBannerForNeutral = false;
+
     _wasBannerChecked = false; // reset flag to trigger check again
   }
 
@@ -186,6 +189,37 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     setState(() {
       showIncompleteBannerForAngry = false;
+    });
+  }
+
+  Future<void> checkCompletionReminderForNeutral() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+
+    final savedTasks = prefs.getStringList('neutral_tasks_$uid');
+    final timeString = prefs.getString('neutral_time_$uid');
+
+    if (savedTasks != null && timeString != null) {
+      final savedTime = DateTime.parse(timeString);
+      final now = DateTime.now();
+
+      if (now.difference(savedTime).inHours < 24) {
+        final completed = savedTasks.length;
+        if (completed > 0 && completed < 3) {
+          setState(() {
+            showIncompleteBannerForNeutral = true;
+          });
+          return;
+        }
+      } else {
+        await prefs.remove('neutral_tasks_$uid');
+        await prefs.remove('neutral_time_$uid');
+      }
+    }
+
+    setState(() {
+      showIncompleteBannerForNeutral = false;
     });
   }
 
@@ -685,6 +719,51 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           onPressed: () {
                             setState(() {
                               showIncompleteBannerForAngry = false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (showIncompleteBannerForNeutral)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AngryScreen(onComplete: () {})),
+                    ).then((_) {
+                      checkCompletionReminderForNeutral(); // Recheck after returning
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(
+                          0xFF8ECFE6), // light salmonish angry theme
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF8ECFE6)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            color: Color.fromARGB(255, 255, 255, 255)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "You haven't completed your Uplifting Neutral Tasks today. Tap here to finish them",
+                            style: GoogleFonts.outfit(
+                                color: Color.fromARGB(255, 255, 255, 255)),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close,
+                              color: Color.fromARGB(255, 255, 255, 255)),
+                          onPressed: () {
+                            setState(() {
+                              showIncompleteBannerForNeutral = false;
                             });
                           },
                         ),
