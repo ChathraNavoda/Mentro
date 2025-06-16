@@ -720,7 +720,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         targetScreen = HappyScreen();
         break;
       case 'neutral':
-        targetScreen = NeutralScreen();
+        targetScreen = NeutralScreen(
+          onComplete: () {},
+        );
         break;
       default:
         targetScreen = null;
