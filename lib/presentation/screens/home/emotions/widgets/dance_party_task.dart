@@ -121,61 +121,68 @@ class _DancePartyTaskState extends State<DancePartyTask> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Column(
-          children: [
-            const SizedBox(height: 16),
-            Lottie.asset(
-              'assets/lottie/dance.json',
-              height: 200,
-              repeat: true,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              _completed
-                  ? "🎉 Dance Complete!"
-                  : "Time Left: $_secondsLeft seconds",
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+        Center(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Lottie.asset(
+                'assets/lottie/dance.json',
+                height: 200,
+                repeat: true,
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _completed ? _restartDanceParty : _startDanceParty,
-              icon: Icon(Icons.play_arrow),
-              label: Text(
+              const SizedBox(height: 20),
+              Text(
                 _completed
-                    ? "Dance Again!"
-                    : _isPlaying
-                        ? "Dancing..."
-                        : "Start Dance Party",
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8ECFE6),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                foregroundColor: Colors.white,
-                textStyle: GoogleFonts.outfit(
-                  fontSize: 16,
+                    ? "🎉 Dance Complete!"
+                    : "Time Left: $_secondsLeft seconds",
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            IconButton(
-              icon: Icon(
-                _isMuted ? Icons.volume_off : Icons.volume_up,
-                color: Colors.black54,
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _completed ? _restartDanceParty : _startDanceParty,
+                icon: Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  _completed
+                      ? "Dance Again!"
+                      : _isPlaying
+                          ? "Dancing..."
+                          : "Start Dance Party",
+                ),
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: const Color(0xFF8ECFE6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  foregroundColor: Colors.white,
+                  textStyle: GoogleFonts.outfit(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-              onPressed: () {
-                setState(() => _isMuted = !_isMuted);
-                _player.setVolume(_isMuted ? 0.0 : 1.0);
-              },
-            ),
-          ],
+              const SizedBox(height: 10),
+              IconButton(
+                icon: Icon(
+                  _isMuted ? Icons.volume_off : Icons.volume_up,
+                  color: Colors.black,
+                ),
+                onPressed: () {
+                  setState(() => _isMuted = !_isMuted);
+                  _player.setVolume(_isMuted ? 0.0 : 1.0);
+                },
+              ),
+            ],
+          ),
         ),
         Align(
           alignment: Alignment.topCenter,

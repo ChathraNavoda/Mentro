@@ -23,6 +23,8 @@ class SpinWheelTask extends StatefulWidget {
 }
 
 class _SpinWheelTaskState extends State<SpinWheelTask> {
+  int? _selectedIndex; // add this
+
   final List<String> _motivations = [
     "Text a friend just to say hi 👋",
     "Stretch and breathe for 30 seconds 🧘‍♂️",
@@ -54,7 +56,7 @@ class _SpinWheelTaskState extends State<SpinWheelTask> {
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: Duration(seconds: 6));
-    if (widget.isCompleted) _hasSpun = true;
+    _loadProgress(); // Load saved message + time
   }
 
   @override
@@ -64,19 +66,62 @@ class _SpinWheelTaskState extends State<SpinWheelTask> {
     super.dispose();
   }
 
-  Future<void> _saveProgress() async {
+  Future<void> _loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final key = 'neutral_tasks_$uid';
-    final timeKey = 'neutral_time_$uid';
+    final msgKey = 'spin_message_$uid';
+    final timeKey = 'spin_time_$uid';
 
-    List<String> existing = prefs.getStringList(key) ?? [];
+    final savedMessage = prefs.getString(msgKey);
+    final savedTime = prefs.getString(timeKey);
+
+    final indexKey = 'spin_index_$uid';
+    final savedIndex = prefs.getInt(indexKey);
+
+    if (savedMessage != null && savedTime != null && savedIndex != null) {
+      final lastSpin = DateTime.tryParse(savedTime);
+      if (lastSpin != null) {
+        final now = DateTime.now();
+        final difference = now.difference(lastSpin);
+        if (difference.inHours < 24) {
+          setState(() {
+            _hasSpun = true;
+            _selectedMessage = savedMessage;
+            _selectedIndex = savedIndex;
+          });
+          return;
+        }
+      }
+    }
+
+    // If 24+ hours passed, reset
+    setState(() {
+      _hasSpun = false;
+      _selectedMessage = null;
+    });
+  }
+
+  Future<void> _saveProgress(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final msgKey = 'spin_message_$uid';
+    final timeKey = 'spin_time_$uid';
+
+    await prefs.setString(msgKey, _motivations[index]);
+    await prefs.setInt('spin_index_$uid', index);
+
+    await prefs.setString(timeKey, DateTime.now().toIso8601String());
+
+    // If you want to also mark it as completed in shared list:
+    final listKey = 'neutral_tasks_$uid';
+    List<String> existing = prefs.getStringList(listKey) ?? [];
     if (!existing.contains('0')) {
       existing.add('0');
-      await prefs.setStringList(key, existing);
-      await prefs.setString(timeKey, DateTime.now().toIso8601String());
+      await prefs.setStringList(listKey, existing);
     }
   }
 
@@ -89,29 +134,29 @@ class _SpinWheelTaskState extends State<SpinWheelTask> {
     setState(() {
       _hasSpun = true;
       _selectedMessage = _motivations[index];
+      _selectedIndex = index;
     });
-
     _confettiController.play();
-    _saveProgress();
+    _saveProgress(index); // <-- pass index here
     widget.onComplete();
   }
 
   Widget _buildResultCard() {
-    if (!_hasSpun || _selectedMessage == null) return const SizedBox();
+    if (!_hasSpun || _selectedMessage == null || _selectedIndex == null)
+      return const SizedBox();
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFF8ECFE6),
-        borderRadius: BorderRadius.circular(16),
+        color: _sliceColors[_selectedIndex!],
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
         _selectedMessage!,
         textAlign: TextAlign.center,
         style: GoogleFonts.outfit(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
         ),
       ),
     );
@@ -168,8 +213,7 @@ class _SpinWheelTaskState extends State<SpinWheelTask> {
               onPressed: _hasSpun ? null : _spinWheel,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF8ECFE6),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -177,9 +221,9 @@ class _SpinWheelTaskState extends State<SpinWheelTask> {
               child: Text(
                 _hasSpun ? 'Come back tomorrow!' : 'Spin the Wheel!',
                 style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
                   color: Colors.white,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),

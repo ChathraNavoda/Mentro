@@ -6,8 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/presentation/screens/home/emotions/widgets/dance_party_task.dart';
+import 'package:mentro/presentation/screens/home/emotions/widgets/draw_mood_task.dart';
 import 'package:mentro/presentation/screens/home/emotions/widgets/spin_wheel_task.dart';
-import 'package:mentro/presentation/screens/home/emotions/widgets/tiny_boost_video_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NeutralScreen extends StatefulWidget {
@@ -166,14 +166,16 @@ class _NeutralScreenState extends State<NeutralScreen>
           const SizedBox(width: 8),
           Text(
             'Next boost in',
-            style: GoogleFonts.outfit(fontSize: 14, color: Colors.black87),
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+            ),
           ),
           const SizedBox(width: 8),
           Text(
             '$hours:$minutes:$seconds',
             style: GoogleFonts.outfit(
               fontSize: 14,
-              color: Color(0xFF8ECFE6),
+              color: Colors.red,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -214,7 +216,7 @@ class _NeutralScreenState extends State<NeutralScreen>
             tabs: const [
               Tab(icon: Icon(Icons.casino), text: "Spin"),
               Tab(icon: Icon(Icons.music_note), text: "Dance"),
-              Tab(icon: Icon(Icons.video_library), text: "Boost"),
+              Tab(icon: Icon(Icons.brush_outlined), text: "Draw"),
             ],
           ),
           Expanded(
@@ -229,10 +231,10 @@ class _NeutralScreenState extends State<NeutralScreen>
                   onComplete: () => _onTaskComplete(1),
                   isCompleted: _completedTasks.contains(1),
                 ),
-                TinyBoostVideoTask(
-                    // onComplete: () => _onTaskComplete(2),
-                    // isCompleted: _completedTasks.contains(2),
-                    ),
+                DrawMoodTask(
+                  onComplete: () => _onTaskComplete(2),
+                  isCompleted: _completedTasks.contains(2),
+                ),
               ],
             ),
           ),
