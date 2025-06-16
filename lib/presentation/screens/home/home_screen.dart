@@ -427,7 +427,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           } else if (moodLower == 'happy') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HappyScreen()),
+              MaterialPageRoute(
+                  builder: (context) => HappyScreen(
+                        onComplete: () {},
+                      )),
             );
           } else {
             // You can add more conditions here for other moods
@@ -796,7 +799,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         );
         break;
       case 'happy':
-        targetScreen = HappyScreen();
+        targetScreen = HappyScreen(
+          onComplete: () {},
+        );
         break;
       case 'neutral':
         targetScreen = NeutralScreen(
