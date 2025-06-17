@@ -458,7 +458,11 @@ class _HistoryScreenState extends State<HistoryScreen>
         controller: _tabController,
         children: [
           buildRippleList(userId),
-          const MoodTimelineWidget(),
+          MoodTimelineWidget(
+              // showArchived: showArchived,
+              // isArchiveProtected: isArchiveProtected,
+              // onUnlockArchive: _authenticateAndToggleArchive,
+              ),
         ],
       ),
     );

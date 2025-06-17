@@ -13,11 +13,14 @@ class MoodTimelineWidget extends StatefulWidget {
 }
 
 class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
-  final Map<DateTime, List<Map<String, dynamic>>> _ripplesByDate = {};
+  final Map<DateTime, List<Map<String, dynamic>>> _visibleRipplesByDate = {};
+  final Map<DateTime, List<Map<String, dynamic>>> _archivedRipplesByDate = {};
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   List<Map<String, dynamic>> _selectedRipples = [];
+  bool _archiveUnlocked = false;
 
   @override
   void initState() {
@@ -36,28 +39,69 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
         .orderBy('date', descending: false)
         .get();
 
-    Map<DateTime, List<Map<String, dynamic>>> grouped = {};
+    Map<DateTime, List<Map<String, dynamic>>> visible = {};
+    Map<DateTime, List<Map<String, dynamic>>> archived = {};
 
     for (var doc in snapshot.docs) {
       final data = doc.data();
+      final isArchived = data['isArchived'] ?? false;
       final dateTime = (data['date'] as Timestamp).toDate();
       final dateKey = DateTime(dateTime.year, dateTime.month, dateTime.day);
-      grouped.putIfAbsent(dateKey, () => []).add(data);
+
+      if (isArchived) {
+        archived.putIfAbsent(dateKey, () => []).add(data);
+      } else {
+        visible.putIfAbsent(dateKey, () => []).add(data);
+      }
     }
 
     setState(() {
-      _ripplesByDate.clear();
-      _ripplesByDate.addAll(grouped);
+      _visibleRipplesByDate.clear();
+      _visibleRipplesByDate.addAll(visible);
+
+      _archivedRipplesByDate.clear();
+      _archivedRipplesByDate.addAll(archived);
+
       _selectedDay = _focusedDay;
-      _selectedRipples = _ripplesByDate[
-              DateTime(_focusedDay.year, _focusedDay.month, _focusedDay.day)] ??
-          [];
+      _updateSelectedRipples(_focusedDay);
     });
   }
 
-  List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
+  void _updateSelectedRipples(DateTime day) {
     final key = DateTime(day.year, day.month, day.day);
-    return _ripplesByDate[key] ?? [];
+    final visible = _visibleRipplesByDate[key] ?? [];
+    final archived = _archivedRipplesByDate[key] ?? [];
+
+    setState(() {
+      _selectedRipples = _archiveUnlocked ? [...visible, ...archived] : visible;
+    });
+  }
+
+  List<Widget> _getMarkersForDay(DateTime day) {
+    final key = DateTime(day.year, day.month, day.day);
+    final visibleCount = _visibleRipplesByDate[key]?.length ?? 0;
+    final hasArchive = _archivedRipplesByDate[key]?.isNotEmpty ?? false;
+
+    List<Widget> markers = [];
+    for (int i = 0; i < visibleCount; i++) {
+      markers.add(const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 0.5),
+        child: Icon(Icons.circle, size: 6, color: Colors.orange),
+      ));
+    }
+    if (hasArchive) {
+      markers.add(const Padding(
+        padding: EdgeInsets.only(left: 2),
+        child: Icon(Icons.lock, size: 10, color: Colors.grey),
+      ));
+    }
+
+    return markers;
+  }
+
+  bool _dayHasArchivedRipples(DateTime day) {
+    final key = DateTime(day.year, day.month, day.day);
+    return _archivedRipplesByDate[key]?.isNotEmpty ?? false;
   }
 
   @override
@@ -70,12 +114,30 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
           focusedDay: _focusedDay,
           calendarFormat: _calendarFormat,
           selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-          eventLoader: _getEventsForDay,
+          eventLoader: (day) {
+            final key = DateTime(day.year, day.month, day.day);
+            return _archiveUnlocked
+                ? [
+                    ...?_visibleRipplesByDate[key],
+                    ...?_archivedRipplesByDate[key]
+                  ]
+                : [...?_visibleRipplesByDate[key]];
+          },
+          calendarBuilders: CalendarBuilders(
+            markerBuilder: (context, day, events) {
+              final markers = _getMarkersForDay(day);
+              if (markers.isEmpty) return const SizedBox();
+              return Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Wrap(spacing: 1, children: markers),
+              );
+            },
+          ),
           onDaySelected: (selected, focused) {
             setState(() {
               _selectedDay = selected;
               _focusedDay = focused;
-              _selectedRipples = _getEventsForDay(selected);
+              _updateSelectedRipples(selected);
             });
           },
           onFormatChanged: (format) {
@@ -92,13 +154,30 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
               color: Color(0xFF4ECDC4),
               shape: BoxShape.circle,
             ),
-            markerDecoration: const BoxDecoration(
-              color: Colors.orange,
-              shape: BoxShape.circle,
-            ),
           ),
         ),
         const SizedBox(height: 16),
+        if (_selectedDay != null && _dayHasArchivedRipples(_selectedDay!))
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _archiveUnlocked = !_archiveUnlocked;
+                  _updateSelectedRipples(_selectedDay!);
+                });
+              },
+              icon: Icon(_archiveUnlocked ? Icons.lock : Icons.lock_open),
+              label: Text(_archiveUnlocked
+                  ? "Lock Archived Ripples"
+                  : "Unlock Archived Ripples"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4ECDC4),
+                foregroundColor: Colors.white,
+                textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
         Expanded(
           child: _selectedRipples.isEmpty
               ? const Center(child: Text("No ripples for this day."))
