@@ -132,25 +132,25 @@ class _KindnessBombTaskState extends State<KindnessBombTask>
                 ),
                 const SizedBox(height: 20),
                 if (_selectedTab == 0)
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _prewrittenMessages.length,
-                      itemBuilder: (context, index) {
-                        final msg = _prewrittenMessages[index];
-                        return ListTile(
-                          title: Text(msg, style: GoogleFonts.outfit()),
-                          leading: Radio<int>(
-                            value: index,
-                            groupValue: _selectedMessageIndex,
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedMessageIndex = val;
-                              });
-                            },
-                          ),
-                        );
-                      },
-                    ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _prewrittenMessages.length,
+                    itemBuilder: (context, index) {
+                      final msg = _prewrittenMessages[index];
+                      return ListTile(
+                        title: Text(msg, style: GoogleFonts.outfit()),
+                        leading: Radio<int>(
+                          value: index,
+                          groupValue: _selectedMessageIndex,
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedMessageIndex = val;
+                            });
+                          },
+                        ),
+                      );
+                    },
                   )
                 else
                   Padding(

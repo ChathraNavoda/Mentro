@@ -165,8 +165,7 @@ class _GratitudeSnapTaskState extends State<GratitudeSnapTask> {
                             "Gratitude Saved!",
                             style: GoogleFonts.outfit(
                               fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 12),

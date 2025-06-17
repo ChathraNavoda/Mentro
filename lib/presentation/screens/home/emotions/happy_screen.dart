@@ -189,7 +189,7 @@ class _HappyScreenState extends State<HappyScreen>
             '$hours:$minutes:$seconds',
             style: GoogleFonts.outfit(
               fontSize: 14,
-              color: Colors.redAccent,
+              color: Colors.red,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -201,6 +201,7 @@ class _HappyScreenState extends State<HappyScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           "Feeling Happy?",
@@ -244,9 +245,10 @@ class _HappyScreenState extends State<HappyScreen>
                   isCompleted: _completedTasks.contains(1),
                 ),
                 HighlightReelTask(
-                    // onComplete: () => _onTaskComplete(2),
-                    // isCompleted: _completedTasks.contains(2),
-                    ),
+                  onComplete: () => _onTaskComplete(2),
+                  isCompleted: _completedTasks.contains(2),
+                  emotionFilter: '',
+                )
               ],
             ),
           ),
