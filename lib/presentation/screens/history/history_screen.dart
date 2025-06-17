@@ -459,10 +459,10 @@ class _HistoryScreenState extends State<HistoryScreen>
         children: [
           buildRippleList(userId),
           MoodTimelineWidget(
-              // showArchived: showArchived,
-              // isArchiveProtected: isArchiveProtected,
-              // onUnlockArchive: _authenticateAndToggleArchive,
-              ),
+            // showArchived: showArchived,
+            isArchiveProtected: isArchiveProtected,
+            // onUnlockArchive: _authenticateAndToggleArchive,
+          ),
         ],
       ),
     );

@@ -3,10 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class MoodTimelineWidget extends StatefulWidget {
-  const MoodTimelineWidget({super.key});
+  final bool isArchiveProtected;
+  const MoodTimelineWidget({super.key, required this.isArchiveProtected});
 
   @override
   State<MoodTimelineWidget> createState() => _MoodTimelineWidgetState();
@@ -86,13 +88,13 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
     for (int i = 0; i < visibleCount; i++) {
       markers.add(const Padding(
         padding: EdgeInsets.symmetric(horizontal: 0.5),
-        child: Icon(Icons.circle, size: 6, color: Colors.orange),
+        child: Icon(Icons.circle, size: 10, color: Colors.orange),
       ));
     }
     if (hasArchive) {
       markers.add(const Padding(
         padding: EdgeInsets.only(left: 2),
-        child: Icon(Icons.lock, size: 10, color: Colors.grey),
+        child: Icon(Icons.lock, size: 10, color: Colors.blueGrey),
       ));
     }
 
@@ -161,17 +163,47 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _archiveUnlocked = !_archiveUnlocked;
-                  _updateSelectedRipples(_selectedDay!);
-                });
+              onPressed: () async {
+                if (!_archiveUnlocked) {
+                  // Trying to unlock
+                  if (widget.isArchiveProtected) {
+                    final auth = LocalAuthentication();
+                    final didAuthenticate = await auth.authenticate(
+                      localizedReason:
+                          'Please authenticate to view archived ripples',
+                      options: const AuthenticationOptions(biometricOnly: true),
+                    );
+
+                    if (didAuthenticate) {
+                      setState(() {
+                        _archiveUnlocked = true;
+                        _updateSelectedRipples(_selectedDay!);
+                      });
+                    }
+                  } else {
+                    // No protection: Unlock directly
+                    setState(() {
+                      _archiveUnlocked = true;
+                      _updateSelectedRipples(_selectedDay!);
+                    });
+                  }
+                } else {
+                  // Locking
+                  setState(() {
+                    _archiveUnlocked = false;
+                    _updateSelectedRipples(_selectedDay!);
+                  });
+                }
               },
-              icon: Icon(_archiveUnlocked ? Icons.lock : Icons.lock_open),
+              icon: Icon(
+                _archiveUnlocked ? Icons.lock : Icons.lock_open,
+                color: Colors.white,
+              ),
               label: Text(_archiveUnlocked
                   ? "Lock Archived Ripples"
                   : "Unlock Archived Ripples"),
               style: ElevatedButton.styleFrom(
+                elevation: 0,
                 backgroundColor: const Color(0xFF4ECDC4),
                 foregroundColor: Colors.white,
                 textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500),
@@ -193,14 +225,16 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
                         DateTime.now();
 
                     return Card(
+                      color: Colors.white,
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        side: const BorderSide(
-                          color: Color(0xFF4ECDC4),
-                          width: 0.4,
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          width: 0,
+                          color: Color.fromARGB(255, 0, 0, 0),
                         ),
                       ),
+                      elevation: 0,
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
