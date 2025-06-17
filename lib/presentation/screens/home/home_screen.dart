@@ -22,11 +22,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
-  bool showIncompleteBannerForAnxious = false;
   bool _wasBannerChecked = false;
   bool showIncompleteBannerForSad = false;
   bool showIncompleteBannerForAngry = false;
+  bool showIncompleteBannerForHappy = false;
   bool showIncompleteBannerForNeutral = false;
+  bool showIncompleteBannerForAnxious = false;
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -62,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       checkCompletionReminderForSad();
       checkCompletionReminderForAngry();
       checkCompletionReminderForNeutral();
+      checkCompletionReminderForHappy();
       _wasBannerChecked = true;
     }
   }
@@ -75,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   void didPopNext() {
     showIncompleteBannerForSad = false;
-
+    showIncompleteBannerForHappy = false;
     showIncompleteBannerForAngry = false;
     showIncompleteBannerForNeutral = false;
 
@@ -158,6 +160,37 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     setState(() {
       showIncompleteBannerForSad = false;
+    });
+  }
+
+  Future<void> checkCompletionReminderForHappy() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || !mounted) return;
+
+    final savedTasks = prefs.getStringList('happy_tasks_$uid');
+    final timeString = prefs.getString('happy_time_$uid');
+
+    if (savedTasks != null && timeString != null) {
+      final savedTime = DateTime.parse(timeString);
+      final now = DateTime.now();
+
+      if (now.difference(savedTime).inHours < 24) {
+        final completed = savedTasks.length;
+        if (completed > 0 && completed < 3) {
+          setState(() {
+            showIncompleteBannerForHappy = true;
+          });
+          return;
+        }
+      } else {
+        await prefs.remove('happy_tasks_$uid');
+        await prefs.remove('happy_time_$uid');
+      }
+    }
+
+    setState(() {
+      showIncompleteBannerForHappy = false;
     });
   }
 
@@ -677,6 +710,50 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           onPressed: () {
                             setState(() {
                               showIncompleteBannerForSad = false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (showIncompleteBannerForHappy)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SadScreen(onComplete: () {})),
+                    ).then((_) {
+                      checkCompletionReminderForHappy(); // Recheck after return
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDEEA5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "Happiness is waiting... finish what sparked your joy!",
+                            style: GoogleFonts.outfit(),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              showIncompleteBannerForHappy = false;
                             });
                           },
                         ),
