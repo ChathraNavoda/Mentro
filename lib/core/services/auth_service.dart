@@ -71,29 +71,42 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    String res = 'Some error occurred!';
+    if (name.trim().isEmpty ||
+        email.trim().isEmpty ||
+        password.trim().isEmpty) {
+      return 'Please fill in all fields.';
+    }
+
     try {
-      if (email.isNotEmpty && password.isNotEmpty && name.isNotEmpty) {
-        UserCredential credential = await _auth.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
+      // Attempt signup
+      UserCredential credential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
 
-        await _firestore.collection('users').doc(credential.user!.uid).set({
-          'name': name,
-          'email': email,
-          'uid': credential.user!.uid,
-        });
+      // Save user data to Firestore
+      await _firestore.collection('users').doc(credential.user!.uid).set({
+        'name': name.trim(),
+        'email': email.trim(),
+        'uid': credential.user!.uid,
+      });
 
-        res = 'success';
-      } else {
-        res = 'Please fill in all fields.';
+      return 'success';
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'email-already-in-use':
+          return 'This email is already in use.';
+        case 'invalid-email':
+          return 'The email address is invalid.';
+        case 'weak-password':
+          return 'Password should be at least 6 characters.';
+        default:
+          return 'Signup failed: ${e.message ?? 'Unknown error.'}';
       }
     } catch (e) {
-      res = e.toString();
       print('Signup Error: $e');
+      return 'An unexpected error occurred. Please try again.';
     }
-    return res;
   }
 
   // -------------------- LOGIN --------------------
@@ -101,20 +114,38 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    String res = 'Some error occurred!';
+    if (email.trim().isEmpty || password.trim().isEmpty) {
+      return 'Please enter all the fields!';
+    }
+
     try {
-      if (email.isNotEmpty && password.isNotEmpty) {
-        await _auth.signInWithEmailAndPassword(
-            email: email, password: password);
-        res = 'success';
-      } else {
-        res = 'Please enter all the fields!';
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+
+      // Check email verification
+      if (!userCredential.user!.emailVerified) {
+        await _auth.signOut(); // Sign out to prevent access
+        return 'Please verify your email before logging in.';
+      }
+
+      return 'success';
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'user-not-found':
+          return 'No account found for this email.';
+        case 'wrong-password':
+          return 'Incorrect password. Try again.';
+        case 'invalid-email':
+          return 'Invalid email address.';
+        default:
+          return 'Login failed: ${e.message ?? 'Unknown error.'}';
       }
     } catch (e) {
-      res = e.toString();
       print('Login Error: $e');
+      return 'An unexpected error occurred. Please try again.';
     }
-    return res;
   }
 
   // -------------------- LOGOUT --------------------

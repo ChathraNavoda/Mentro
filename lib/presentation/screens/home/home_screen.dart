@@ -434,11 +434,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       'sad':
           "It’s okay to feel sad. 😔 Let’s do something gentle to help you heal. You’re not alone—I’ve got you. ❤️‍🩹",
       'angry':
-          "Take a few deep breaths. 😤 Let’s step back and cool off—how about a short walk or some music?",
+          "Let’s step back and cool off. How about we do something cool to help you heal",
       'anxious':
-          "Feeling overwhelmed? 😰 Let’s slow things down. A deep breath and a moment of stillness might help. 🧘",
+          "Feeling overwhelmed? 😰 Let’s slow things down. How about we do something calm to help you heal",
       'neutral':
-          "Feeling meh? 😐 Let’s shake things up—maybe try something new or revisit a small joy you love!",
+          "Feeling meh? 😐 Let’s cheer you up!. Check this out. Hope this will make your day.!",
     };
 
     final suggestion = suggestions[mood.toLowerCase()] ?? '';
@@ -455,15 +455,45 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           if (moodLower == 'anxious') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => AnxiousScreen()),
+              MaterialPageRoute(
+                builder: (context) => AnxiousScreen(),
+              ),
             );
           } else if (moodLower == 'happy') {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => HappyScreen(
-                        onComplete: () {},
-                      )),
+                builder: (context) => HappyScreen(
+                  onComplete: () {},
+                ),
+              ),
+            );
+          } else if (moodLower == 'angry') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AngryScreen(
+                  onComplete: () {},
+                ),
+              ),
+            );
+          } else if (moodLower == 'sad') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SadScreen(
+                  onComplete: () {},
+                ),
+              ),
+            );
+          } else if (moodLower == 'neutral') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NeutralScreen(
+                  onComplete: () {},
+                ),
+              ),
             );
           } else {
             // You can add more conditions here for other moods
@@ -570,6 +600,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
+                    elevation: 0,
                     backgroundColor: const Color(0xFF4ECDC4),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
@@ -723,7 +754,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => SadScreen(onComplete: () {})),
+                          builder: (context) => HappyScreen(onComplete: () {})),
                     ).then((_) {
                       checkCompletionReminderForHappy(); // Recheck after return
                     });
@@ -812,7 +843,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => AngryScreen(onComplete: () {})),
+                          builder: (context) =>
+                              NeutralScreen(onComplete: () {})),
                     ).then((_) {
                       checkCompletionReminderForNeutral(); // Recheck after returning
                     });

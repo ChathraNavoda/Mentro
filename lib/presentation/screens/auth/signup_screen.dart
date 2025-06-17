@@ -1,10 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/presentation/common/button_widget.dart';
-import 'package:mentro/presentation/common/snackbar_widget.dart';
 import 'package:mentro/presentation/common/text_field_widget.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
-import 'package:mentro/presentation/screens/home/home_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -29,24 +28,58 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void signupUser() async {
     String res = await AuthService().signupUser(
-      name: nameController.text,
-      email: emailController.text,
-      password: passwordController.text,
+      name: nameController.text.trim(),
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
     );
+
     if (res == 'success') {
       setState(() {
         isLoading = true;
       });
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => HomeScreen(),
+
+      // Send verification email
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      }
+
+      // Show verification alert
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Verify Your Email'),
+          content: Text(
+            'A verification link has been sent to your email. Please verify before logging in.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+              child: const Text('OK'),
+            ),
+          ],
         ),
       );
     } else {
-      setState(() {
-        isLoading = false;
-      });
-      showSnackBar(context, res);
+      // Show the error (e.g., "email already in use")
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Signup Failed'),
+          content: Text(res),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
   }
 

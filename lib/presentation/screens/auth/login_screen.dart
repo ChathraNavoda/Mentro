@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/core/services/google_service.dart';
@@ -28,16 +29,68 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void loginUsers() async {
+    setState(() {
+      isLoading = true;
+    });
+
     String res = await AuthService().loginUser(
-      email: emailController.text,
-      password: passwordController.text,
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
     );
+
     if (res == 'success') {
-      setState(() {
-        isLoading = true;
-      });
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null && !user.emailVerified) {
+        await FirebaseAuth.instance.signOut();
+        setState(() {
+          isLoading = false;
+        });
+
+        // 🚨 Show verification reminder with "I’ve Verified" button
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Email Not Verified'),
+            content: Text(
+              'We’ve sent a verification link to your email. Please verify before signing in.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  // Try reloading user to check if they’ve verified now
+                  await FirebaseAuth.instance.currentUser?.reload();
+                  final refreshedUser = FirebaseAuth.instance.currentUser;
+
+                  if (refreshedUser != null && refreshedUser.emailVerified) {
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => CustomBottomNavbar()),
+                    );
+                  } else {
+                    Navigator.pop(context);
+                    showSnackBar(context,
+                        'Still not verified. Please check your inbox.');
+                  }
+                },
+                child: Text('I’ve Verified'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+
+        return;
+      }
+
+      // ✅ User is verified — proceed
       Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => CustomBottomNavbar()));
+        MaterialPageRoute(builder: (context) => CustomBottomNavbar()),
+      );
     } else {
       setState(() {
         isLoading = false;
@@ -51,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
     double height = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -75,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             Button(
               onTap: loginUsers,
-              text: 'Signin',
+              text: isLoading ? 'Loading...' : 'Signin',
             ),
             ForgotPassword(),
             SizedBox(height: height / 40),
