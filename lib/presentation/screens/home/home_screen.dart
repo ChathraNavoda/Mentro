@@ -621,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Wrap(
@@ -632,7 +632,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           .map((mood) => buildMoodImage(mood, size: 55))
                           .toList(),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(height: 14),
                     Text(
                       averageMood,
                       style: GoogleFonts.outfit(

@@ -283,6 +283,7 @@ class _SadScreenState extends State<SadScreen>
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
+                    elevation: 0,
                     backgroundColor: const Color(0xFFBA90D0),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),

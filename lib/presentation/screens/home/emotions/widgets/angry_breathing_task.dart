@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,12 +21,13 @@ class AngryBreathingTask extends StatefulWidget {
 }
 
 class _AngryBreathingTaskState extends State<AngryBreathingTask> {
+  late ConfettiController _confettiController;
+
   bool _isCompleted = false;
   Timer? _timer;
   Timer? _breathingCycle;
   int _remaining = 60;
 
-  // Breathing Animation State
   double _circleSize = 100;
   String _phaseText = "Inhale";
   BreathingPhase _phase = BreathingPhase.inhale;
@@ -34,16 +36,15 @@ class _AngryBreathingTaskState extends State<AngryBreathingTask> {
   void initState() {
     super.initState();
     _isCompleted = widget.isCompleted;
-    if (!_isCompleted) {
-      loadProgress();
-    }
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
+    if (!_isCompleted) loadProgress();
   }
 
   Future<void> loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-
     final saved = prefs.getBool('angry_breathing_done_$uid') ?? false;
     if (saved) {
       setState(() {
@@ -56,7 +57,6 @@ class _AngryBreathingTaskState extends State<AngryBreathingTask> {
     final prefs = await SharedPreferences.getInstance();
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-
     await prefs.setBool('angry_breathing_done_$uid', true);
   }
 
@@ -70,6 +70,7 @@ class _AngryBreathingTaskState extends State<AngryBreathingTask> {
         setState(() {
           _isCompleted = true;
         });
+        _confettiController.play();
         widget.onComplete();
         saveProgress();
       } else {
@@ -132,107 +133,128 @@ class _AngryBreathingTaskState extends State<AngryBreathingTask> {
   void dispose() {
     _timer?.cancel();
     _breathingCycle?.cancel();
+    _confettiController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return _isCompleted
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 80),
-                const SizedBox(height: 20),
-                Text(
-                  "Breathing Task Complete!",
-                  style: GoogleFonts.outfit(
-                      fontSize: 20, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: restartTask,
-                  icon: const Icon(
-                    Icons.replay,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    "Restart",
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        _isCompleted
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green, size: 80),
+                    const SizedBox(height: 20),
+                    Text(
+                      "Breathing Task Complete!",
+                      style: GoogleFonts.outfit(
+                          fontSize: 20, fontWeight: FontWeight.w600),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: const Color(0xFFEF7A87),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: restartTask,
+                      icon: const Icon(
+                        Icons.replay,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        "Restart",
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFFEF7A87),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(seconds: 4),
+                      width: _circleSize,
+                      height: _circleSize,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFFEF7A87).withOpacity(0.4),
+                      ),
                     ),
-                  ),
-                )
-              ],
-            ),
-          )
-        : Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(seconds: 4),
-                  width: _circleSize,
-                  height: _circleSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFEF7A87).withOpacity(0.4),
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Text(
-                  _phaseText,
-                  style: GoogleFonts.outfit(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFEF7A87)),
-                ),
-                const SizedBox(height: 30),
-                Text(
-                  "⏱️ ${_remaining}s",
-                  style: GoogleFonts.outfit(
-                      fontSize: 22, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton.icon(
-                  onPressed: startBreathing,
-                  icon: const Icon(
-                    Icons.play_arrow,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    "Start Breathing",
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 30),
+                    Text(
+                      _phaseText,
+                      style: GoogleFonts.outfit(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFEF7A87)),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: const Color(0xFFEF7A87),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                    const SizedBox(height: 30),
+                    Text(
+                      "⏱️ ${_remaining}s",
+                      style: GoogleFonts.outfit(
+                          fontSize: 22, fontWeight: FontWeight.w500),
                     ),
-                  ),
+                    const SizedBox(height: 30),
+                    ElevatedButton.icon(
+                      onPressed: startBreathing,
+                      icon: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        "Start Breathing",
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFFEF7A87),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
+              ),
+
+        // 🎉 Confetti Layer
+        ConfettiWidget(
+          confettiController: _confettiController,
+          blastDirectionality: BlastDirectionality.explosive,
+          shouldLoop: false,
+          emissionFrequency: 0.05,
+          numberOfParticles: 20,
+          gravity: 0.2,
+          colors: const [
+            Color(0xFFEF7A87),
+            Color(0xFFEF7A87),
+            Colors.white,
+          ],
+        ),
+      ],
+    );
   }
 }
 

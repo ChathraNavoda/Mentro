@@ -104,30 +104,39 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
-    _navigateAfterDelay();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigateAfterDelay();
+    });
   }
 
   Future<void> _navigateAfterDelay() async {
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (_navigated || !mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
     final isOnboarded = prefs.getBool('isOnboarded') ?? false;
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
+      _navigated = true;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const CustomBottomNavbar()),
       );
     } else if (isOnboarded) {
+      _navigated = true;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     } else {
+      _navigated = true;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const OnboardingWalkthrough()),
@@ -137,20 +146,23 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // background stays white
-      body: Center(
-        child: RippleAnimation(
-          color: const Color(0xFF4ECDC4), // Mentro theme color
-          delay: const Duration(milliseconds: 600),
-          repeat: true,
-          minRadius: 60,
-          ripplesCount: 6,
-          duration: const Duration(seconds: 3),
-          child: Image.asset(
-            'assets/images/logo2.png',
-            height: 120,
-            width: 120,
+    return WillPopScope(
+      onWillPop: () async => false, // prevents back press on Splash
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: RippleAnimation(
+            color: const Color(0xFF4ECDC4),
+            delay: const Duration(milliseconds: 600),
+            repeat: true,
+            minRadius: 60,
+            ripplesCount: 6,
+            duration: const Duration(seconds: 3),
+            child: Image.asset(
+              'assets/images/logo2.png',
+              height: 120,
+              width: 120,
+            ),
           ),
         ),
       ),

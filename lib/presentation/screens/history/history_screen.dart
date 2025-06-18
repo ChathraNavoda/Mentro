@@ -610,7 +610,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                     Navigator.pop(context);
                   }
                 },
-                items: ['All', 'Happy', 'Sad', 'Angry', 'Relaxed']
+                items: ['All', 'Happy', 'Sad', 'Angry', 'Neutral']
                     .map((e) => DropdownMenuItem(
                           value: e,
                           child: Text(

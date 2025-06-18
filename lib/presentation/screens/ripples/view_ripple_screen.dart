@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
 import 'package:share_plus/share_plus.dart';
@@ -132,10 +133,16 @@ class ViewRippleScreen extends StatelessWidget {
                           runSpacing: 4,
                           children: tags
                               .map((tag) => Chip(
+                                    elevation: 0,
                                     label: Text("#$tag"),
-                                    backgroundColor: const Color(0xFF4ECDC4),
+                                    backgroundColor:
+                                        Colors.grey[200], // Light grey color
                                     labelStyle: const TextStyle(
                                       fontWeight: FontWeight.w500,
+                                      color: Colors.black87,
+                                    ),
+                                    shape: StadiumBorder(
+                                      side: BorderSide.none,
                                     ),
                                   ))
                               .toList(),
@@ -178,11 +185,23 @@ class ViewRippleScreen extends StatelessWidget {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancel'),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.outfit(
+                                  color: Color(0xFF4ECDC4),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Yes'),
+                              child: Text(
+                                'Yes',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
                           ],
                         ),

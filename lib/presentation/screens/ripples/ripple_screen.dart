@@ -246,7 +246,7 @@ class _RippleScreenState extends State<RippleScreen> {
                                   child: Text(
                                     'Yes',
                                     style: GoogleFonts.outfit(
-                                      color: Colors.teal,
+                                      color: Colors.red,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -312,6 +312,15 @@ class _RippleScreenState extends State<RippleScreen> {
                                           .doc(docId)
                                           .delete();
                                       Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Ripple deleted successfully',
+                                            style: GoogleFonts.outfit(),
+                                          ),
+                                        ),
+                                      );
                                     } catch (e) {
                                       debugPrint("Delete failed: $e");
                                     }

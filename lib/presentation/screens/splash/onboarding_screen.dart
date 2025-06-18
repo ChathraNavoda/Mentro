@@ -17,39 +17,40 @@ class _OnboardingWalkthroughState extends State<OnboardingWalkthrough> {
   final List<Map<String, String>> onboardingData = [
     {
       "title": "Welcome to Mentro",
-      "description": "Discover your emotional world with Mentro.",
+      "description":
+          "Step into a gentle space crafted for your emotions — where healing begins with awareness.",
       "image": "logo"
     },
     {
       "title": "Ripple Your Emotions",
       "description":
-          "Add a daily emotional ripple like a journal — anytime you feel something.",
-      "image": "assets/lottie/ripple.json"
+          "Capture your feelings as ripples — like journaling with heart. Every emotion matters.",
+      "image": "assets/lottie/ripple2.json"
     },
     {
       "title": "Secure and Private",
       "description":
-          "Your ripples are safely stored and protected — just for you.",
-      "image": "assets/lottie/secure.json" // A lock or shield animation
+          "Your emotions are safe here — locked away like whispers in a diary, seen only by you.",
+      "image": "assets/lottie/secure2.json"
     },
     {
       "title": "Mood Analytics",
       "description":
-          "View charts and patterns of your moods by day, week, and intensity.",
-      "image": "assets/lottie/analytics.json"
+          "Visualize your emotional journey — explore patterns, peaks, and gentle valleys of your mood.",
+      "image": "assets/lottie/analytics2.json"
     },
     {
       "title": "Personalized Healing",
       "description":
-          "Get daily fun suggestions like yoga, breathing, and reflection.",
-      "image": "assets/lottie/suggestions.json"
+          "Receive mindful suggestions crafted from your unique emotional rhythms — breathe, move, or reflect.",
+      "image": "assets/lottie/suggestions2.json"
     },
     {
       "title": "Let’s Begin Your Journey",
       "description":
-          "Let’s go with Mentro and start your emotional wellness journey.",
-      "image": "assets/lottie/go.json"
-    },
+          "Take your first step with Mentro — towards a brighter, balanced emotional life. You’re not alone.",
+      "image": "assets/lottie/go2.json"
+    }
   ];
 
   void _completeOnboarding() async {

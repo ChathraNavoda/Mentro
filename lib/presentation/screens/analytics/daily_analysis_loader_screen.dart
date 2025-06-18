@@ -228,7 +228,7 @@ class _DailyAnalysisLoaderScreenState extends State<DailyAnalysisLoaderScreen> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Row(
+                          child: Column(
                             children: [
                               Text(
                                 'Average Mood: ',

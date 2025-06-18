@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:math';
 
+import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,6 +36,8 @@ class _PunchItOutTaskState extends State<PunchItOutTask>
 
   final _player = AudioPlayer();
 
+  late ConfettiController _confettiController;
+
   final List<String> punchSounds = [
     'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/punch1.mp3',
     'https://raw.githubusercontent.com/ChathraNavoda/Mentro/main/assets/sounds/punch2.mp3',
@@ -66,6 +68,9 @@ class _PunchItOutTaskState extends State<PunchItOutTask>
         .chain(CurveTween(curve: Curves.elasticIn))
         .animate(_shakeController);
 
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
+
     if (!_isCompleted) loadProgress();
   }
 
@@ -87,7 +92,7 @@ class _PunchItOutTaskState extends State<PunchItOutTask>
   }
 
   Future<void> playPunchSound() async {
-    final random = Random();
+    final random = math.Random();
     final url = punchSounds[random.nextInt(punchSounds.length)];
     try {
       await _player.setUrl(url);
@@ -118,6 +123,7 @@ class _PunchItOutTaskState extends State<PunchItOutTask>
       setState(() => _isCompleted = true);
       saveProgress();
       playBoomSound();
+      _confettiController.play();
       widget.onComplete();
     }
   }
@@ -148,102 +154,121 @@ class _PunchItOutTaskState extends State<PunchItOutTask>
     _scaleController.dispose();
     _shakeController.dispose();
     _player.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final shake = math.sin(_shakeAnimation.value * pi * 2) * 8;
+    final shake = math.sin(_shakeAnimation.value * math.pi * 2) * 8;
 
-    return _isCompleted
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("💣💥 BOOM!", style: TextStyle(fontSize: 40)),
-                const SizedBox(height: 16),
-                Text("You punched it all out! 😤",
-                    style: GoogleFonts.outfit(
-                        fontSize: 20, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: restartTask,
-                  icon: const Icon(Icons.replay, color: Colors.white),
-                  label: Text(
-                    "Restart",
-                    style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: const Color(0xFFEF7A87),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                )
-              ],
-            ),
-          )
-        : AnimatedBuilder(
-            animation: _shakeAnimation,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(shake, 0),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Punch the anger away!",
-                          style: GoogleFonts.outfit(
-                              fontSize: 22, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 8),
-                      Text(
-                          "Tap the glove ${targetPunches - punchCount} more times!",
-                          style: GoogleFonts.outfit(fontSize: 16)),
-                      const SizedBox(height: 30),
-                      ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: GestureDetector(
-                          onTap: handlePunch,
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEF7A87),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.red.shade200,
-                                  blurRadius: 12,
-                                  spreadRadius: 2,
-                                )
-                              ],
-                            ),
-                            child: const Icon(Icons.sports_mma,
-                                size: 60, color: Colors.white),
-                          ),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        _isCompleted
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("💣💥 BOOM!", style: TextStyle(fontSize: 40)),
+                    const SizedBox(height: 16),
+                    Text("You punched it all out! 😤",
+                        style: GoogleFonts.outfit(
+                            fontSize: 20, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: restartTask,
+                      icon: const Icon(Icons.replay, color: Colors.white),
+                      label: Text(
+                        "Restart",
+                        style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFFEF7A87),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
                         ),
                       ),
-                      const SizedBox(height: 30),
-                      Text("$punchCount / $targetPunches punches",
-                          style: GoogleFonts.outfit(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFFEF7A87))),
-                      const SizedBox(height: 20),
-                      Text(getCrackEmoji(),
-                          style: const TextStyle(fontSize: 40)),
-                    ],
-                  ),
+                    )
+                  ],
                 ),
-              );
-            },
-          );
+              )
+            : AnimatedBuilder(
+                animation: _shakeAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(shake, 0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Punch the anger away!",
+                              style: GoogleFonts.outfit(
+                                  fontSize: 22, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          Text(
+                              "Tap the glove ${targetPunches - punchCount} more times!",
+                              style: GoogleFonts.outfit(fontSize: 16)),
+                          const SizedBox(height: 30),
+                          ScaleTransition(
+                            scale: _scaleAnimation,
+                            child: GestureDetector(
+                              onTap: handlePunch,
+                              child: Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEF7A87),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.red.shade200,
+                                      blurRadius: 12,
+                                      spreadRadius: 2,
+                                    )
+                                  ],
+                                ),
+                                child: const Icon(Icons.sports_mma,
+                                    size: 60, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          Text("$punchCount / $targetPunches punches",
+                              style: GoogleFonts.outfit(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFFEF7A87))),
+                          const SizedBox(height: 20),
+                          Text(getCrackEmoji(),
+                              style: const TextStyle(fontSize: 40)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+        ConfettiWidget(
+          confettiController: _confettiController,
+          blastDirectionality: BlastDirectionality.explosive,
+          shouldLoop: false,
+          emissionFrequency: 0.05,
+          numberOfParticles: 25,
+          gravity: 0.2,
+          colors: const [
+            Color(0xFFEF7A87),
+            Colors.white,
+            Colors.redAccent,
+          ],
+        ),
+      ],
+    );
   }
 }
