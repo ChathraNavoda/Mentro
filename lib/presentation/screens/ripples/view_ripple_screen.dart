@@ -40,7 +40,7 @@ class ViewRippleScreen extends StatelessWidget {
         }
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
-        final title = data['title'] ?? '';
+        final trigger = data['trigger'] ?? '';
         final description = data['description'] ?? '';
         final emotion = data['emotion'] ?? '';
         final timestamp = data['date']?.toDate();
@@ -77,10 +77,10 @@ class ViewRippleScreen extends StatelessWidget {
                     RippleAnimation(
                       repeat: true,
                       color: rippleColor,
-                      minRadius: 60,
+                      minRadius: 40,
                       ripplesCount: 6,
                       child: CircleAvatar(
-                        radius: 60,
+                        radius: 40,
                         backgroundImage: AssetImage(emotionImage),
                         backgroundColor: Colors.transparent,
                       ),
@@ -109,9 +109,9 @@ class ViewRippleScreen extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        title,
+                        trigger,
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -236,7 +236,7 @@ class ViewRippleScreen extends StatelessWidget {
                     icon: Icons.share_outlined,
                     label: 'Share',
                     onPressed: () {
-                      Share.share('$title\n\n$description');
+                      Share.share('$trigger\n\n$description');
                     },
                     iconColor: const Color(0xFF4ECDC4),
                   ),
@@ -291,7 +291,7 @@ Map<String, dynamic> emotionData = {
     'color': Color(0xFFEF7A87),
   },
   'Neutral': {
-    'image': 'assets/images/relaxed.png',
+    'image': 'assets/images/neutral.png',
     'color': Color(0xFF8ECFE6),
   },
   'Anxious': {
