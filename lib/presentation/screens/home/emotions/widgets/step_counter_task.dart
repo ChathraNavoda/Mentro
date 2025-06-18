@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,6 +37,7 @@ class _StepCounterTaskState extends State<StepCounterTask> {
 
   bool _taskCompleted = false;
   bool _showRestart = false;
+  late ConfettiController _confettiController;
 
   String? _userKey;
 
@@ -47,6 +49,8 @@ class _StepCounterTaskState extends State<StepCounterTask> {
       _userKey = 'stepCounterTaskCompleted_$uid';
       _loadTaskCompleted();
     }
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 5));
   }
 
   Future<void> _loadTaskCompleted() async {
@@ -135,7 +139,7 @@ class _StepCounterTaskState extends State<StepCounterTask> {
       _trackingStarted = false;
       _showRestart = true;
     });
-
+    _confettiController.play();
     _saveTaskCompleted(true);
     widget.onComplete();
   }
@@ -158,6 +162,7 @@ class _StepCounterTaskState extends State<StepCounterTask> {
   @override
   void dispose() {
     _subscription?.cancel();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -269,6 +274,18 @@ class _StepCounterTaskState extends State<StepCounterTask> {
               ),
             ),
           ),
+        ConfettiWidget(
+          confettiController: _confettiController,
+          blastDirectionality: BlastDirectionality.explosive,
+          emissionFrequency: 0.05,
+          numberOfParticles: 20,
+          shouldLoop: false,
+          colors: const [
+            Color(0xFFBA90D0),
+            Color(0xFFBA90D0),
+            Colors.white,
+          ],
+        ),
       ],
     );
   }

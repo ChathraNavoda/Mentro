@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,7 +22,7 @@ class AffirmationTask extends StatefulWidget {
 }
 
 class _AffirmationTaskState extends State<AffirmationTask> {
-  static const int totalDuration = 10; // adjust as needed
+  static const int totalDuration = 30;
   int _secondsLeft = totalDuration;
   bool _isStarted = false;
   bool _completed = false;
@@ -29,10 +30,21 @@ class _AffirmationTaskState extends State<AffirmationTask> {
   Timer? _timer;
   bool _alreadyReported = false;
 
+  late ConfettiController _confettiController;
+
   @override
   void initState() {
     super.initState();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 5));
     loadProgress();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _confettiController.dispose();
+    super.dispose();
   }
 
   Future<void> loadProgress() async {
@@ -88,9 +100,10 @@ class _AffirmationTaskState extends State<AffirmationTask> {
         });
 
         if (!_alreadyReported) {
-          widget.onComplete(); // report to parent once
+          widget.onComplete();
           _alreadyReported = true;
           saveProgress();
+          _confettiController.play(); // 🎉 Trigger confetti
         }
 
         Future.delayed(const Duration(seconds: 2), () {
@@ -113,66 +126,79 @@ class _AffirmationTaskState extends State<AffirmationTask> {
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final mins = (_secondsLeft ~/ 60).toString().padLeft(2, '0');
     final secs = (_secondsLeft % 60).toString().padLeft(2, '0');
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      alignment: Alignment.center,
       children: [
-        Lottie.asset(
-          'assets/lottie/affirmation.json',
-          height: 200,
-          width: 200,
-          repeat: true,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          _completed ? "You're Amazing!" : "Time Left: $mins:$secs",
-          style: GoogleFonts.outfit(fontSize: 24, color: Colors.black87),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          _completed
-              ? "Positive vibes completed.! 🎉"
-              : "Repeat after me:\n“I am worthy. I am healing. I am enough.”",
-          textAlign: TextAlign.center,
-          style: GoogleFonts.outfit(
-            fontSize: 16,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: _completed && _showRestart
-              ? restartAffirmation
-              : (_isStarted ? null : startAffirmation),
-          style: ElevatedButton.styleFrom(
-            elevation: 0,
-            backgroundColor: const Color(0xFFBA90D0),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Lottie.asset(
+              'assets/lottie/affirmation.json',
+              height: 200,
+              width: 200,
+              repeat: true,
+              fit: BoxFit.contain,
             ),
-          ),
-          child: Text(
-            _completed
-                ? (_showRestart ? 'Restart Affirmations' : 'Affirmation Done!')
-                : 'Start Affirmations',
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 20),
+            Text(
+              _completed ? "You're Amazing!" : "Time Left: $mins:$secs",
+              style: GoogleFonts.outfit(fontSize: 24, color: Colors.black87),
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              _completed
+                  ? "Positive vibes completed! 🎉"
+                  : "Repeat after me:\n“I am worthy. I am healing. I am enough.”",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _completed && _showRestart
+                  ? restartAffirmation
+                  : (_isStarted ? null : startAffirmation),
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: const Color(0xFFBA90D0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: Text(
+                _completed
+                    ? (_showRestart
+                        ? 'Restart Affirmations'
+                        : 'Affirmation Done!')
+                    : 'Start Affirmations',
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ),
+        if (_completed)
+          ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [
+              Color(0xFFBA90D0),
+              Color(0xFFBA90D0),
+              Colors.white,
+            ],
+          ),
       ],
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,7 +23,7 @@ class NatureWalkTask extends StatefulWidget {
 }
 
 class _NatureWalkTaskState extends State<NatureWalkTask> {
-  static const int totalDuration = 3; // use 600 for 10 mins
+  static const int totalDuration = 600; // use 600 for 10 mins
   int _secondsLeft = totalDuration;
   bool _isStarted = false;
   bool _completed = false;
@@ -32,6 +33,8 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
 
   String? _userKey;
 
+  late ConfettiController _confettiController; // ⬅️ Add confetti controller
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +43,15 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
       _userKey = 'natureWalkTaskCompleted_$uid';
       _loadCompletionState();
     }
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _confettiController.dispose(); // ⬅️ Dispose controller
+    super.dispose();
   }
 
   Future<void> _loadCompletionState() async {
@@ -93,6 +105,8 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
           _completed = true;
         });
 
+        _confettiController.play(); // 🎉 Play confetti
+
         if (!_alreadyReported) {
           widget.onWalkComplete();
           widget.onComplete();
@@ -121,64 +135,78 @@ class _NatureWalkTaskState extends State<NatureWalkTask> {
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final mins = (_secondsLeft ~/ 60).toString().padLeft(2, '0');
     final secs = (_secondsLeft % 60).toString().padLeft(2, '0');
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      alignment: Alignment.center,
       children: [
-        Lottie.asset(
-          'assets/lottie/nature_park.json',
-          height: 270,
-          width: 270,
-          repeat: true,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          _completed ? "Walk Complete!" : "Time Left: $mins:$secs",
-          style: GoogleFonts.outfit(fontSize: 24, color: Colors.black87),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          _completed
-              ? "Nature is healing 🌿"
-              : "Walk slowly. Breathe deeply. Let your thoughts go. Feel the earth beneath you.",
-          textAlign: TextAlign.center,
-          style: GoogleFonts.outfit(fontSize: 16, color: Colors.black87),
-        ),
-        const SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: _isStarted
-              ? null
-              : _completed && _showRestart
-                  ? _restartWalk
-                  : startWalk,
-          style: ElevatedButton.styleFrom(
-            elevation: 0,
-            backgroundColor: const Color(0xFFBA90D0),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Lottie.asset(
+              'assets/lottie/nature_park.json',
+              height: 270,
+              width: 270,
+              repeat: true,
+              fit: BoxFit.contain,
             ),
-          ),
-          child: Text(
-            _completed
-                ? (_showRestart ? 'Restart Walk' : 'Walk Complete!')
-                : 'Start 10-Min Walk',
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 20),
+            Text(
+              _completed ? "Walk Complete!" : "Time Left: $mins:$secs",
+              style: GoogleFonts.outfit(fontSize: 24, color: Colors.black87),
             ),
-          ),
+            const SizedBox(height: 16),
+            Text(
+              _completed
+                  ? "Nature is healing 🌿"
+                  : "Walk slowly. Breathe deeply. Let your thoughts go. Feel the earth beneath you.",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(fontSize: 16, color: Colors.black87),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _isStarted
+                  ? null
+                  : _completed && _showRestart
+                      ? _restartWalk
+                      : startWalk,
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: const Color(0xFFBA90D0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: Text(
+                _completed
+                    ? (_showRestart ? 'Restart Walk' : 'Walk Complete!')
+                    : 'Start 10-Min Walk',
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        /// 🎉 Confetti overlay
+        ConfettiWidget(
+          confettiController: _confettiController,
+          blastDirectionality: BlastDirectionality.explosive,
+          emissionFrequency: 0.05,
+          numberOfParticles: 20,
+          shouldLoop: false,
+          colors: const [
+            Color(0xFFBA90D0),
+            Color(0xFFBA90D0),
+            Colors.white,
+          ],
         ),
       ],
     );
