@@ -167,25 +167,47 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
                 if (!_archiveUnlocked) {
                   // Trying to unlock
                   if (widget.isArchiveProtected) {
-                    final auth = LocalAuthentication();
-                    final didAuthenticate = await auth.authenticate(
-                      localizedReason:
-                          'Please authenticate to view archived ripples',
-                      options: const AuthenticationOptions(biometricOnly: true),
-                    );
+                    try {
+                      final auth = LocalAuthentication();
+                      final canCheckBiometrics = await auth.canCheckBiometrics;
+                      final isDeviceSupported = await auth.isDeviceSupported();
 
-                    if (didAuthenticate) {
-                      setState(() {
-                        _archiveUnlocked = true;
-                        _updateSelectedRipples(_selectedDay!);
-                      });
+                      if (!canCheckBiometrics && !isDeviceSupported) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Biometric authentication not available')),
+                        );
+                        return;
+                      }
+
+                      final didAuthenticate = await auth.authenticate(
+                        localizedReason:
+                            'Please authenticate to view archived ripples',
+                        options: const AuthenticationOptions(
+                          biometricOnly:
+                              true, // You can change to false for PIN fallback
+                          stickyAuth: true,
+                        ),
+                      );
+
+                      if (didAuthenticate) {
+                        setState(() {
+                          _archiveUnlocked = true;
+                          _updateSelectedRipples(_selectedDay!);
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Authentication failed')),
+                        );
+                      }
+                    } catch (e) {
+                      debugPrint("Biometric auth error: $e");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Authentication error: $e')),
+                      );
                     }
-                  } else {
-                    // No protection: Unlock directly
-                    setState(() {
-                      _archiveUnlocked = true;
-                      _updateSelectedRipples(_selectedDay!);
-                    });
                   }
                 } else {
                   // Locking

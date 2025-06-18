@@ -358,12 +358,14 @@ class _HistoryScreenState extends State<HistoryScreen>
   }
 
   Future<void> _authenticateAndToggleArchive() async {
+    final auth = LocalAuthentication();
     try {
       setState(() => isAuthenticating = true);
 
-      final canAuth =
-          await auth.canCheckBiometrics || await auth.isDeviceSupported();
-      if (!canAuth) {
+      final canCheckBiometrics = await auth.canCheckBiometrics;
+      final isDeviceSupported = await auth.isDeviceSupported();
+
+      if (!canCheckBiometrics && !isDeviceSupported) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Biometric authentication not available')),
@@ -373,7 +375,10 @@ class _HistoryScreenState extends State<HistoryScreen>
 
       final didAuthenticate = await auth.authenticate(
         localizedReason: 'Please authenticate to view archived ripples',
-        options: const AuthenticationOptions(biometricOnly: true),
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
       );
 
       if (didAuthenticate) {
@@ -387,6 +392,9 @@ class _HistoryScreenState extends State<HistoryScreen>
       }
     } catch (e) {
       debugPrint("Biometric auth failed: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Authentication error: $e')),
+      );
     } finally {
       setState(() => isAuthenticating = false);
     }

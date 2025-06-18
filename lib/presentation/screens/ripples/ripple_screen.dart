@@ -40,36 +40,48 @@ class _RippleScreenState extends State<RippleScreen> {
     try {
       setState(() => isAuthenticating = true);
 
-      final canAuth =
-          await auth.canCheckBiometrics || await auth.isDeviceSupported();
-      if (!canAuth) {
+      final canCheckBiometrics = await auth.canCheckBiometrics;
+      final isDeviceSupported = await auth.isDeviceSupported();
+
+      if (!canCheckBiometrics && !isDeviceSupported) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Biometric authentication not available')),
+            content: Text('Biometric authentication not available'),
+          ),
         );
         return;
       }
 
       final didAuthenticate = await auth.authenticate(
         localizedReason: 'Please authenticate to view archived ripples',
-        options: const AuthenticationOptions(biometricOnly: true),
+        options: const AuthenticationOptions(
+          biometricOnly: true, // change to false to allow PIN fallback
+          stickyAuth: true,
+        ),
       );
 
       if (didAuthenticate) {
-        setState(() {
-          showArchived = true;
-        });
+        setState(() => showArchived = true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-            'Authentication failed',
-            style: GoogleFonts.outfit(),
-          )),
+            content: Text(
+              'Authentication failed',
+              style: GoogleFonts.outfit(),
+            ),
+          ),
         );
       }
     } catch (e) {
       debugPrint("Biometric auth failed: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Authentication error: $e',
+            style: GoogleFonts.outfit(),
+          ),
+        ),
+      );
     } finally {
       setState(() => isAuthenticating = false);
     }

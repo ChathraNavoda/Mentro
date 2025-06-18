@@ -121,27 +121,30 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     final isOnboarded = prefs.getBool('isOnboarded') ?? false;
-    final user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
-      _navigated = true;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const CustomBottomNavbar()),
-      );
-    } else if (isOnboarded) {
-      _navigated = true;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-    } else {
-      _navigated = true;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const OnboardingWalkthrough()),
-      );
-    }
+    FirebaseAuth.instance.authStateChanges().first.then((user) {
+      if (_navigated || !mounted) return;
+
+      if (user != null) {
+        _navigated = true;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const CustomBottomNavbar()),
+        );
+      } else if (isOnboarded) {
+        _navigated = true;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      } else {
+        _navigated = true;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OnboardingWalkthrough()),
+        );
+      }
+    });
   }
 
   @override
