@@ -1,11 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/core/services/messaging/fcm_service.dart';
 import 'package:mentro/core/services/notification/notification_service.dart';
-import 'package:mentro/presentation/screens/auth/login_screen.dart';
-import 'package:mentro/presentation/screens/home/custom_bottom_navbar.dart';
+import 'package:mentro/presentation/screens/splash/splash_screen.dart';
 
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
@@ -29,15 +27,7 @@ class MyApp extends StatelessWidget {
       ),
       navigatorObservers: [routeObserver],
       debugShowCheckedModeBanner: false,
-      home: StreamBuilder(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return CustomBottomNavbar();
-            } else {
-              return LoginScreen();
-            }
-          }),
+      home: const SplashScreen(),
     );
   }
 }

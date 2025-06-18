@@ -612,7 +612,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               ),
               const SizedBox(height: 30),
               Text(
-                'Average Mood for Today',
+                'Top Mood for Today',
                 style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.w500,
@@ -620,38 +620,25 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               ),
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5),
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Row(
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 20,
+                      runSpacing: 10,
                       children: topMoods
-                          .map((mood) => Padding(
-                                padding: const EdgeInsets.only(right: 40),
-                                child: buildMoodImage(mood, size: 55),
-                              ))
+                          .map((mood) => buildMoodImage(mood, size: 55))
                           .toList(),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            'Average Mood: ',
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            averageMood,
-                            style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF4ECDC4)),
-                          ),
-                        ],
+                    const SizedBox(width: 14),
+                    Text(
+                      averageMood,
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF4ECDC4),
                       ),
                     ),
                   ],
