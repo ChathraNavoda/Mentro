@@ -116,41 +116,37 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateAfterDelay() async {
     await Future.delayed(const Duration(seconds: 2));
-
     if (_navigated || !mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
     final isOnboarded = prefs.getBool('isOnboarded') ?? false;
+    final user = FirebaseAuth.instance.currentUser;
 
-    FirebaseAuth.instance.authStateChanges().first.then((user) {
-      if (_navigated || !mounted) return;
+    if (_navigated || !mounted) return;
 
-      if (user != null) {
-        _navigated = true;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const CustomBottomNavbar()),
-        );
-      } else if (isOnboarded) {
-        _navigated = true;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      } else {
-        _navigated = true;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OnboardingWalkthrough()),
-        );
-      }
-    });
+    _navigated = true; // mark navigation started early
+
+    if (user != null) {
+      // Clear entire stack and go to home
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const CustomBottomNavbar()),
+        (route) => false,
+      );
+    } else if (isOnboarded) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const OnboardingWalkthrough()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async => false, // prevents back press on Splash
+      onWillPop: () async => false, // prevent back on splash
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Center(
