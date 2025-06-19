@@ -151,14 +151,22 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             InkWell(
               onTap: () async {
-                await GoogleService().signInWithGoogle();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CustomBottomNavbar(),
-                  ),
-                );
-              },
+  setState(() => isLoading = true);
+
+  String res = await GoogleService().signInWithGoogle();
+
+  setState(() => isLoading = false);
+
+  if (res == 'success') {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const CustomBottomNavbar()),
+    );
+  } else {
+    showSnackBar(context, res);
+  }
+},
+
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Container(
