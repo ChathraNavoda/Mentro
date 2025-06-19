@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "194665787546-o3eeuo7to19nbut1jdom3dde87ipka0c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mentro.app",
+            "certificate_hash": "f5582a531db5a63e00df7d4eb58e8388752d57a3"
+          }
+        },
+        {
           "client_id": "194665787546-d59b3gsds0ps7n2arq8jsiv0bjp04893.apps.googleusercontent.com",
           "client_type": 3
         }

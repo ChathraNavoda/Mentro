@@ -146,7 +146,16 @@ class _OnboardingWalkthroughState extends State<OnboardingWalkthrough> {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: _completeOnboarding,
+              onPressed: () {
+                if (_currentPage == onboardingData.length - 1) {
+                  _completeOnboarding();
+                } else {
+                  _controller.nextPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              },
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: const Color(0xFF4ECDC4),
@@ -160,7 +169,7 @@ class _OnboardingWalkthroughState extends State<OnboardingWalkthrough> {
                 _currentPage == onboardingData.length - 1
                     ? "Get Started"
                     : "Next",
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
             const SizedBox(height: 30),

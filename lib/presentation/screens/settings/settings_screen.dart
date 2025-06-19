@@ -75,8 +75,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 30,
-                    backgroundImage: NetworkImage(user?.photoURL ?? ''),
+                    radius: 35,
+                    backgroundColor: Colors.grey.shade200,
+                    child: ClipOval(
+                      child: FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/default_avatar.png',
+                        image: user?.photoURL?.isNotEmpty == true
+                            ? user!.photoURL!
+                            : 'assets/images/user.png',
+                        imageErrorBuilder: (context, error, stackTrace) =>
+                            Image.asset('assets/images/default_avatar.png'),
+                        fit: BoxFit.cover,
+                        width: 70,
+                        height: 70,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Column(
@@ -253,7 +266,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 builder: (_) => AlertDialog(
                   backgroundColor: Colors.white,
                   title: Text("Support"),
-                  content: Text("Email us at: support@mentro.app"),
+                  content: Text("Email us at: mentro.ripple@gmail.com"),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),

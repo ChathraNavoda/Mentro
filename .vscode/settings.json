@@ -3,6 +3,7 @@
         "androidx",
         "cupertino",
         "fileprovider",
+        "firebasestorage",
         "firestore",
         "flutterlocalnotifications",
         "mentro",
