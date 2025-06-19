@@ -54,6 +54,9 @@ signingConfigs {
             shrinkResources = true
             minifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            ndk {
+                debugSymbolLevel 'FULL' // Or 'SYMBOL_TABLE' if your app bundle gets too large
+            }
         }
     }
 }
