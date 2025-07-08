@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/core/services/google_service.dart';
@@ -38,63 +37,40 @@ class _LoginScreenState extends State<LoginScreen> {
       password: passwordController.text.trim(),
     );
 
+    setState(() {
+      isLoading = false;
+    });
+
     if (res == 'success') {
-      User? user = FirebaseAuth.instance.currentUser;
+      // ✅ Show welcome snackbar
+      showSnackBar(
+          context, 'Welcome to Mentro! You have logged in successfully.');
 
-      if (user != null && !user.emailVerified) {
-        await FirebaseAuth.instance.signOut();
-        setState(() {
-          isLoading = false;
-        });
-
-        // 🚨 Show verification reminder with "I’ve Verified" button
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Email Not Verified'),
-            content: Text(
-              'We’ve sent a verification link to your email. Please verify before signing in.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  // Try reloading user to check if they’ve verified now
-                  await FirebaseAuth.instance.currentUser?.reload();
-                  final refreshedUser = FirebaseAuth.instance.currentUser;
-
-                  if (refreshedUser != null && refreshedUser.emailVerified) {
-                    Navigator.pop(context); // Close dialog
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => CustomBottomNavbar()),
-                    );
-                  } else {
-                    Navigator.pop(context);
-                    showSnackBar(context,
-                        'Still not verified. Please check your inbox.');
-                  }
-                },
-                child: Text('I’ve Verified'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('OK'),
-              ),
-            ],
-          ),
-        );
-
-        return;
-      }
-
-      // ✅ User is verified — proceed
+      // Navigate to Home
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => CustomBottomNavbar()),
       );
+    } else if (res.contains('not verified')) {
+      // 🚨 Show email not verified dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Email Not Verified'),
+          content: Text(
+            '$res\n\nPlease check your spam folder if you don’t see the email.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
     } else {
-      setState(() {
-        isLoading = false;
-      });
+      // ❌ Show any other errors as snackbar
       showSnackBar(context, res);
     }
   }
@@ -151,22 +127,22 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             InkWell(
               onTap: () async {
-  setState(() => isLoading = true);
+                setState(() => isLoading = true);
 
-  String res = await GoogleService().signInWithGoogle();
+                String res = await GoogleService().signInWithGoogle();
 
-  setState(() => isLoading = false);
+                setState(() => isLoading = false);
 
-  if (res == 'success') {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const CustomBottomNavbar()),
-    );
-  } else {
-    showSnackBar(context, res);
-  }
-},
-
+                if (res == 'success') {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const CustomBottomNavbar()),
+                  );
+                } else {
+                  showSnackBar(context, res);
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Container(
