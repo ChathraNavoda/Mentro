@@ -206,7 +206,7 @@ class AuthService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   // -------------------- SIGN UP --------------------
-  Future<String> signupUser({
+  Future<Map<String, String>> signupUser({
     required String name,
     required String email,
     required String password,
@@ -214,40 +214,53 @@ class AuthService {
     if (name.trim().isEmpty ||
         email.trim().isEmpty ||
         password.trim().isEmpty) {
-      return 'Please fill in all fields.';
+      return {'status': 'error', 'message': 'Please fill in all fields.'};
     }
 
     try {
-      // Attempt signup
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
       );
 
-      // Send verification email
       await credential.user!.sendEmailVerification();
-
-      // Save displayName temporarily in FirebaseAuth (used later for Firestore user)
       await credential.user!.updateDisplayName(name.trim());
-
-      // Sign out immediately until verified
       await _auth.signOut();
 
-      return 'Signup successful! A verification link has been sent to your email. Please verify before logging in.';
+      return {
+        'status': 'success',
+        'message':
+            'Signup successful! A verification link has been sent to your email. Please verify before logging in.'
+      };
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'email-already-in-use':
-          return 'This email is already in use. Try logging in instead.';
+          return {
+            'status': 'error',
+            'message': 'This email is already in use. Try logging in instead.'
+          };
         case 'invalid-email':
-          return 'Please enter a valid email address.';
+          return {
+            'status': 'error',
+            'message': 'Please enter a valid email address.'
+          };
         case 'weak-password':
-          return 'Password should be at least 6 characters.';
+          return {
+            'status': 'error',
+            'message': 'Password should be at least 6 characters.'
+          };
         default:
-          return 'Signup failed: ${e.message ?? 'Unknown error.'}';
+          return {
+            'status': 'error',
+            'message': 'Signup failed: ${e.message ?? 'Unknown error.'}'
+          };
       }
     } catch (e) {
       print('Signup Error: $e');
-      return 'An unexpected error occurred. Please try again.';
+      return {
+        'status': 'error',
+        'message': 'An unexpected error occurred. Please try again.'
+      };
     }
   }
 

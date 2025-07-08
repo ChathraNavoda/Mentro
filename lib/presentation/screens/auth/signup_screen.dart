@@ -30,7 +30,7 @@ class _SignupScreenState extends State<SignupScreen> {
       isLoading = true;
     });
 
-    String res = await AuthService().signupUser(
+    Map<String, String> res = await AuthService().signupUser(
       name: nameController.text.trim(),
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
@@ -40,15 +40,16 @@ class _SignupScreenState extends State<SignupScreen> {
       isLoading = false;
     });
 
-    if (res.contains('verify your email')) {
-      // Show verification alert
+    if (res['status'] == 'success') {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Verify Your Email'),
           content: Text(
-            '$res\n\nIf you don’t see it, check your spam folder.',
-          ),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+              '${res['message']}\n\nIf you don’t see it, please check your spam folder.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -63,12 +64,11 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
       );
     } else {
-      // Show any other signup error
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Signup Failed'),
-          content: Text(res),
+          content: Text(res['message']!),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
