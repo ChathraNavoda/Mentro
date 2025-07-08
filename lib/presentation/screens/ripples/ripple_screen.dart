@@ -356,7 +356,7 @@ class _RippleScreenState extends State<RippleScreen> {
                               content: Text(
                                 'Are you sure you want to unarchive this ripple? It will appear back in the main ripple list.',
                                 style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.w300,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                               actions: [
@@ -391,7 +391,7 @@ class _RippleScreenState extends State<RippleScreen> {
                                     }
                                   },
                                   child: const Text('Unarchive',
-                                      style: TextStyle(color: Colors.green)),
+                                      style: TextStyle(color: Colors.red)),
                                 ),
                               ],
                             ),

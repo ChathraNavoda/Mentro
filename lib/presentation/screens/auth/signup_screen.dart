@@ -46,9 +46,6 @@ class _SignupScreenState extends State<SignupScreen> {
         builder: (context) => AlertDialog(
           title: Text('Verify Your Email'),
           content: Text(
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
               '${res['message']}\n\nIf you don’t see it, please check your spam folder.'),
           actions: [
             TextButton(

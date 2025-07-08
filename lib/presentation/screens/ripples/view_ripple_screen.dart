@@ -45,6 +45,7 @@ class ViewRippleScreen extends StatelessWidget {
         final emotion = data['emotion'] ?? '';
         final timestamp = data['date']?.toDate();
         final tags = List<String>.from(data['tags'] ?? []);
+        final isArchived = data['isArchived'] ?? false;
 
         final formattedDate = timestamp != null
             ? DateFormat('MMMM d, yyyy').format(timestamp)
@@ -173,15 +174,18 @@ class ViewRippleScreen extends StatelessWidget {
                     iconColor: const Color(0xFF4ECDC4),
                   ),
                   _BottomIconButton(
-                    icon: Icons.archive_outlined,
-                    label: 'Archive',
+                    icon: isArchived ? Icons.unarchive : Icons.archive_outlined,
+                    label: isArchived ? 'Unarchive' : 'Archive',
                     onPressed: () async {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Archive Ripple'),
-                          content: const Text(
-                              'Are you sure you want to archive this ripple?'),
+                          title: Text(isArchived
+                              ? 'Unarchive Ripple'
+                              : 'Archive Ripple'),
+                          content: Text(isArchived
+                              ? 'Are you sure you want to unarchive this ripple?'
+                              : 'Are you sure you want to archive this ripple?'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
@@ -214,18 +218,20 @@ class ViewRippleScreen extends StatelessWidget {
                               .doc(userId)
                               .collection('ripples')
                               .doc(rippleId)
-                              .update({'isArchived': true});
+                              .update({'isArchived': !isArchived});
 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("Ripple archived successfully")),
+                            SnackBar(
+                              content: Text(isArchived
+                                  ? "Ripple unarchived successfully"
+                                  : "Ripple archived successfully"),
+                            ),
                           );
 
                           Navigator.pop(context);
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text("Failed to archive ripple: $e")),
+                            SnackBar(content: Text("Failed: $e")),
                           );
                         }
                       }
