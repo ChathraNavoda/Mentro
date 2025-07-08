@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/core/services/auth_service.dart';
-import 'package:mentro/core/services/google_service.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../main.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -22,6 +25,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _loadArchiveProtection();
+  }
+
+  StreamSubscription? _rippleSubscription;
+
+  @override
+  void dispose() {
+    _rippleSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadArchiveProtection() async {
@@ -333,13 +344,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       TextButton(
                         onPressed: () async {
-                          Navigator.of(context).pop(); // close dialog
+                          Navigator.of(context).pop(); // close dialog first
+
                           await AuthService().logout();
-                          await GoogleService().googleSignOut();
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                                builder: (context) => LoginScreen()),
+
+                          if (!mounted) return;
+
+                          // ✅ Show snackbar using global key
+                          scaffoldMessengerKey.currentState?.showSnackBar(
+                            SnackBar(content: Text('You are logged out.')),
                           );
+
+                          // ✅ Delay briefly to ensure Firestore listeners clean up before navigation
+                          Future.delayed(Duration(milliseconds: 300), () {
+                            // ✅ Use rootNavigator to avoid disposed context
+                            navigatorKey.currentState?.pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (_) => LoginScreen()),
+                              (route) => false,
+                            );
+                          });
                         },
                         child: Text(
                           "Logout",

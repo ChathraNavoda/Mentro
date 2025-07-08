@@ -127,9 +127,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 String res = await GoogleService().signInWithGoogle();
 
+                if (!mounted) return; // ✅
+
                 setState(() => isLoading = false);
 
                 if (res == 'success') {
+                  showSnackBar(context,
+                      'Welcome to Mentro! You have logged in successfully.');
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
