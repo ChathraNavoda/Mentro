@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/presentation/common/button_widget.dart';
@@ -27,30 +26,28 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void signupUser() async {
+    setState(() {
+      isLoading = true;
+    });
+
     String res = await AuthService().signupUser(
       name: nameController.text.trim(),
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
     );
 
-    if (res == 'success') {
-      setState(() {
-        isLoading = true;
-      });
+    setState(() {
+      isLoading = false;
+    });
 
-      // Send verification email
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && !user.emailVerified) {
-        await user.sendEmailVerification();
-      }
-
+    if (res.contains('verify your email')) {
       // Show verification alert
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Verify Your Email'),
           content: Text(
-            'A verification link has been sent to your email. Please verify before logging in.',
+            '$res\n\nIf you don’t see it, check your spam folder.',
           ),
           actions: [
             TextButton(
@@ -66,7 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
       );
     } else {
-      // Show the error (e.g., "email already in use")
+      // Show any other signup error
       showDialog(
         context: context,
         builder: (context) => AlertDialog(

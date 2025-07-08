@@ -89,7 +89,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                           .sendPasswordResetEmail(email: emailController.text)
                           .then((value) {
                         showSnackBar(context,
-                            'We have sent you the reset password link to your email.');
+                            'We have sent you the reset password link to your email. Please check your inbox or spam folder.');
                       }).onError((error, stackTrace) {
                         showSnackBar(context, error.toString());
                       });
