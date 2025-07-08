@@ -233,12 +233,44 @@ class AuthService {
             'Signup successful! A verification link has been sent to your email. Please verify before logging in.'
       };
     } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case 'email-already-in-use':
+      if (e.code == 'email-already-in-use') {
+        try {
+          // ✅ Attempt to sign in with provided credentials to check verification status
+          UserCredential existingUserCredential =
+              await _auth.signInWithEmailAndPassword(
+            email: email.trim(),
+            password: password.trim(),
+          );
+
+          User? existingUser = existingUserCredential.user;
+
+          if (existingUser != null && !existingUser.emailVerified) {
+            // 🟡 Email exists but not verified
+            await existingUser.sendEmailVerification(); // Resend verification
+            await _auth.signOut();
+
+            return {
+              'status': 'error',
+              'message':
+                  'This email is already registered but not verified. We have re-sent the verification email. Please check your inbox and spam folder.'
+            };
+          } else {
+            await _auth.signOut();
+            return {
+              'status': 'error',
+              'message': 'This email is already in use. Try logging in instead.'
+            };
+          }
+        } on FirebaseAuthException catch (_) {
+          // Password mismatch or other issue
           return {
             'status': 'error',
             'message': 'This email is already in use. Try logging in instead.'
           };
+        }
+      }
+
+      switch (e.code) {
         case 'invalid-email':
           return {
             'status': 'error',
@@ -265,12 +297,15 @@ class AuthService {
   }
 
   // -------------------- LOGIN --------------------
-  Future<String> loginUser({
+  Future<Map<String, String>> loginUser({
     required String email,
     required String password,
   }) async {
     if (email.trim().isEmpty || password.trim().isEmpty) {
-      return 'Please enter both email and password!';
+      return {
+        'status': 'error',
+        'message': 'Please enter both email and password!'
+      };
     }
 
     try {
@@ -281,16 +316,17 @@ class AuthService {
 
       User? user = userCredential.user;
 
-      // Check email verification
       if (!user!.emailVerified) {
-        await _auth.signOut(); // Sign out to prevent access
+        await _auth.signOut();
+        // await user.delete();
 
-        // Optionally delete unverified accounts to clean DB
-        await user.delete();
-        return 'Your email is not verified yet. Please check your inbox and spam folder for the verification link before logging in.';
+        return {
+          'status': 'not_verified',
+          'message':
+              'Your email is not verified yet. Please check your inbox and spam folder for the verification link before logging in.'
+        };
       }
 
-      // Check if Firestore user document exists
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       if (!userDoc.exists) {
         await _firestore.collection('users').doc(user.uid).set({
@@ -301,21 +337,29 @@ class AuthService {
         });
       }
 
-      return 'success';
+      return {'status': 'success', 'message': 'Login successful.'};
     } on FirebaseAuthException catch (e) {
+      String errorMsg;
       switch (e.code) {
         case 'user-not-found':
-          return 'No account found for this email. Please sign up first.';
+          errorMsg = 'No account found for this email. Please sign up first.';
+          break;
         case 'wrong-password':
-          return 'Incorrect password. Please try again.';
+          errorMsg = 'Incorrect password. Please try again.';
+          break;
         case 'invalid-email':
-          return 'Invalid email address.';
+          errorMsg = 'Invalid email address.';
+          break;
         default:
-          return 'Login failed: ${e.message ?? 'Unknown error.'}';
+          errorMsg = 'Login failed: ${e.message ?? 'Unknown error.'}';
       }
+      return {'status': 'error', 'message': errorMsg};
     } catch (e) {
       print('Login Error: $e');
-      return 'An unexpected error occurred. Please try again.';
+      return {
+        'status': 'error',
+        'message': 'An unexpected error occurred. Please try again.'
+      };
     }
   }
 

@@ -32,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoading = true;
     });
 
-    String res = await AuthService().loginUser(
+    Map<String, String> res = await AuthService().loginUser(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
     );
@@ -41,23 +41,20 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoading = false;
     });
 
-    if (res == 'success') {
-      // ✅ Show welcome snackbar
+    if (res['status'] == 'success') {
       showSnackBar(
           context, 'Welcome to Mentro! You have logged in successfully.');
 
-      // Navigate to Home
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => CustomBottomNavbar()),
       );
-    } else if (res.contains('not verified')) {
-      // 🚨 Show email not verified dialog
+    } else if (res['status'] == 'not_verified') {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Email Not Verified'),
           content: Text(
-            '$res\n\nPlease check your spam folder if you don’t see the email.',
+            '${res['message']}\n\nPlease check your spam folder if you don’t see the email.',
           ),
           actions: [
             TextButton(
@@ -70,8 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } else {
-      // ❌ Show any other errors as snackbar
-      showSnackBar(context, res);
+      showSnackBar(context, res['message'] ?? 'An error occurred.');
     }
   }
 
