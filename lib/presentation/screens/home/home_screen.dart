@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/main.dart';
+import 'package:mentro/presentation/screens/auth/login_screen.dart';
 import 'package:mentro/presentation/screens/home/add_ripple_screen.dart';
 import 'package:mentro/presentation/screens/home/emotions/angry_screen.dart';
 import 'package:mentro/presentation/screens/home/emotions/anxious_screen.dart';
@@ -28,7 +31,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool showIncompleteBannerForHappy = false;
   bool showIncompleteBannerForNeutral = false;
   bool showIncompleteBannerForAnxious = false;
-
+  //bool _hasHandledLogout = false;
+  bool hasShownLogout = false;
+  StreamSubscription<DocumentSnapshot>? userDocSub;
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -51,6 +56,88 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     listenToMoodUpdates();
     checkCompletionReminderForAnxious();
     checkCompletionReminderForSad();
+
+    // FirebaseAuth.instance.userChanges().listen((user) async {
+    //   if (user == null && !_hasHandledLogout) {
+    //     _hasHandledLogout = true;
+
+    //     if (!mounted) return;
+
+    //     scaffoldMessengerKey.currentState?.showSnackBar(
+    //       SnackBar(content: Text('You have been logged out or deleted.')),
+    //     );
+
+    //     navigatorKey.currentState?.pushAndRemoveUntil(
+    //       MaterialPageRoute(builder: (_) => LoginScreen()),
+    //       (route) => false,
+    //     );
+    //   } else if (user != null) {
+    //     _hasHandledLogout = false;
+
+    //     try {
+    //       await user.reload(); // refresh user
+    //     } catch (e) {
+    //       // 🔴 Only sign out if error indicates user deletion
+
+    //       print("User reload error: $e");
+
+    //       // Check if user still exists or if it's a transient network error
+    //       final refreshedUser = FirebaseAuth.instance.currentUser;
+
+    //       if (refreshedUser == null) {
+    //         await FirebaseAuth.instance.signOut();
+    //       } else {
+    //         print(
+    //             "User reload failed but user still exists. Skipping forced sign out.");
+    //       }
+    //     }
+    //   }
+    // });
+
+    // ✅ Listen to Firestore user doc existence
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      userDocSub = FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .snapshots()
+          .listen((doc) async {
+        if (!doc.exists && !hasShownLogout) {
+          hasShownLogout = true;
+
+          await FirebaseAuth.instance.signOut();
+
+          if (!mounted) return;
+
+          scaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(content: Text('Your account was deleted.')),
+          );
+
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => LoginScreen()),
+            (route) => false,
+          );
+        }
+      });
+    }
+
+    // ✅ Listen to Auth sign out
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user == null && !hasShownLogout) {
+        hasShownLogout = true;
+
+        scaffoldMessengerKey.currentState?.showSnackBar(
+          SnackBar(content: Text('You have been logged out.')),
+        );
+
+        navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+          (route) => false,
+        );
+      } else if (user != null) {
+        hasShownLogout = false; // Reset for future
+      }
+    });
   }
 
   @override
