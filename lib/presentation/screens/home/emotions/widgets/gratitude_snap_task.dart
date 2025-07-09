@@ -174,7 +174,10 @@ class _GratitudeSnapTaskState extends State<GratitudeSnapTask> {
                             children: [
                               ElevatedButton.icon(
                                 onPressed: resetSnap,
-                                icon: Icon(Icons.refresh),
+                                icon: Icon(
+                                  Icons.refresh,
+                                  color: Colors.black,
+                                ),
                                 label: Text("Retake"),
                                 style: ElevatedButton.styleFrom(
                                   iconColor: Colors.black,
@@ -209,7 +212,10 @@ class _GratitudeSnapTaskState extends State<GratitudeSnapTask> {
                                         bytes, context);
                                   }
                                 },
-                                icon: Icon(Icons.download),
+                                icon: Icon(
+                                  Icons.download,
+                                  color: Colors.black,
+                                ),
                                 label: Text("Download"),
                               ),
                             ],
@@ -218,7 +224,10 @@ class _GratitudeSnapTaskState extends State<GratitudeSnapTask> {
                       )
                     : ElevatedButton.icon(
                         onPressed: pickImage,
-                        icon: Icon(Icons.camera_alt),
+                        icon: Icon(
+                          Icons.camera_alt,
+                          color: Colors.black,
+                        ),
                         label: Text("Take a Gratitude Snap"),
                         style: ElevatedButton.styleFrom(
                           elevation: 0,

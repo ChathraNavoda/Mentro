@@ -18,6 +18,7 @@ import 'package:timezone/data/latest.dart';
 import 'package:timezone/timezone.dart';
 
 import '../analytics/weekly_mood_insights_screen.dart';
+import 'widgets/scroll_down_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ScrollController _scrollController = ScrollController();
   final List<String> moodPriority = [
     'anxious',
     'angry',
@@ -160,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   void dispose() {
     routeObserver.unsubscribe(this); // Unregister
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -596,28 +599,31 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             );
           }
         },
-        child: Card(
-          color: const Color.fromARGB(255, 255, 255, 255),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(width: 1, color: Color(0xFF4ECDC4))),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.lightbulb, color: Color(0xFF4ECDC4)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    suggestion,
-                    style: GoogleFonts.outfit(fontSize: 15),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Card(
+            color: const Color.fromARGB(255, 255, 255, 255),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(width: 1, color: Color(0xFF4ECDC4))),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.lightbulb, color: Color(0xFF4ECDC4)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      suggestion,
+                      style: GoogleFonts.outfit(fontSize: 15),
+                    ),
                   ),
-                ),
-                const Icon(Icons.arrow_forward_ios,
-                    size: 16, color: Color(0xFF4ECDC4)),
-              ],
+                  const Icon(Icons.arrow_forward_ios,
+                      size: 16, color: Color(0xFF4ECDC4)),
+                ],
+              ),
             ),
           ),
         ),
@@ -648,6 +654,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -655,10 +662,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 25),
                   Image.asset(
                     'assets/images/logo3.png',
                   ),
+                  const SizedBox(height: 10),
                   Text(
                     "How are you feeling today?",
                     style: GoogleFonts.outfit(
@@ -698,7 +706,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 40),
               Text(
                 'Top Mood for Today',
                 style: GoogleFonts.outfit(
@@ -733,7 +741,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 ),
               ),
               buildMoodSuggestion(getSuggestionMood(averageMood)),
+              Center(
+                child: ScrollDirectionIndicator(
+                  scrollController: _scrollController,
+                  scrollOffset: 300,
+                ),
+              ),
               Card(
+                elevation: 0,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 color: const Color(0xFF4ECDC4),

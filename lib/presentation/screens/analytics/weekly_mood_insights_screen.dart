@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class WeeklyMoodInsightsScreen extends StatefulWidget {
   const WeeklyMoodInsightsScreen({Key? key}) : super(key: key);
@@ -157,7 +158,14 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Weekly Mood Insights"),
+        title: Text(
+          "Weekly Mood Insights",
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: const Color(0xFF4ECDC4),
       ),
       body: isLoading
@@ -179,8 +187,8 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
                           LineChartBarData(
                             spots: weeklySpots,
                             isCurved: true,
-                            color: Color(0xFF4ECDC4), // ✅ updated
-                            barWidth: 3,
+                            color: Colors.black54, // ✅ updated
+                            barWidth: 1,
                             dotData: FlDotData(
                               show: true,
                               getDotPainter: (spot, percent, barData, index) {

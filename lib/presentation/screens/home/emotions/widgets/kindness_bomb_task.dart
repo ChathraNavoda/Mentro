@@ -143,6 +143,7 @@ class _KindnessBombTaskState extends State<KindnessBombTask>
                         leading: Radio<int>(
                           value: index,
                           groupValue: _selectedMessageIndex,
+                          activeColor: Colors.black,
                           onChanged: (val) {
                             setState(() {
                               _selectedMessageIndex = val;
