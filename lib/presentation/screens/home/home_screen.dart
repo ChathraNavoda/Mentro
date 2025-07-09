@@ -17,6 +17,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart';
 import 'package:timezone/timezone.dart';
 
+import '../analytics/weekly_mood_insights_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -653,11 +655,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 10),
                   Image.asset(
                     'assets/images/logo3.png',
                   ),
-                  const SizedBox(height: 18),
                   Text(
                     "How are you feeling today?",
                     style: GoogleFonts.outfit(
@@ -719,7 +720,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           .map((mood) => buildMoodImage(mood, size: 55))
                           .toList(),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     Text(
                       averageMood,
                       style: GoogleFonts.outfit(
@@ -732,6 +733,28 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 ),
               ),
               buildMoodSuggestion(getSuggestionMood(averageMood)),
+              Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                color: const Color(0xFF4ECDC4),
+                child: ListTile(
+                  leading: const Icon(Icons.show_chart, color: Colors.white),
+                  title: const Text(
+                    'Weekly Mood Insights',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                  trailing:
+                      const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const WeeklyMoodInsightsScreen()),
+                    );
+                  },
+                ),
+              ),
               const SizedBox(height: 20),
               if (showIncompleteBannerForAnxious)
                 GestureDetector(
