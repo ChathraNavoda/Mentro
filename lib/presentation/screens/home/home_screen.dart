@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -18,6 +19,7 @@ import 'package:timezone/data/latest.dart';
 import 'package:timezone/timezone.dart';
 
 import '../analytics/weekly_mood_insights_screen.dart';
+import 'widgets/draw_heart.dart';
 import 'widgets/scroll_down_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -41,6 +43,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       FlutterLocalNotificationsPlugin();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ScrollController _scrollController = ScrollController();
+  int _logoTapCount = 0;
+  late ConfettiController _confettiController;
+  bool showHint = false;
   final List<String> moodPriority = [
     'anxious',
     'angry',
@@ -55,48 +60,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   void initState() {
     super.initState();
-
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
     init();
     listenToMoodUpdates();
     checkCompletionReminderForAnxious();
     checkCompletionReminderForSad();
-
-    // FirebaseAuth.instance.userChanges().listen((user) async {
-    //   if (user == null && !_hasHandledLogout) {
-    //     _hasHandledLogout = true;
-
-    //     if (!mounted) return;
-
-    //     scaffoldMessengerKey.currentState?.showSnackBar(
-    //       SnackBar(content: Text('You have been logged out or deleted.')),
-    //     );
-
-    //     navigatorKey.currentState?.pushAndRemoveUntil(
-    //       MaterialPageRoute(builder: (_) => LoginScreen()),
-    //       (route) => false,
-    //     );
-    //   } else if (user != null) {
-    //     _hasHandledLogout = false;
-
-    //     try {
-    //       await user.reload(); // refresh user
-    //     } catch (e) {
-    //       // 🔴 Only sign out if error indicates user deletion
-
-    //       print("User reload error: $e");
-
-    //       // Check if user still exists or if it's a transient network error
-    //       final refreshedUser = FirebaseAuth.instance.currentUser;
-
-    //       if (refreshedUser == null) {
-    //         await FirebaseAuth.instance.signOut();
-    //       } else {
-    //         print(
-    //             "User reload failed but user still exists. Skipping forced sign out.");
-    //       }
-    //     }
-    //   }
-    // });
 
     // ✅ Listen to Firestore user doc existence
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -142,6 +111,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         hasShownLogout = false; // Reset for future
       }
     });
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
   }
 
   @override
@@ -156,6 +127,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       checkCompletionReminderForNeutral();
       checkCompletionReminderForHappy();
       _wasBannerChecked = true;
+      checkShowHint();
     }
   }
 
@@ -163,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void dispose() {
     routeObserver.unsubscribe(this); // Unregister
     _scrollController.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -179,6 +152,28 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       checkCompletionReminderForAnxious(); // Check again when user comes back to Home tab
+    }
+  }
+
+  Future<void> checkShowHint() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) return; // not logged in – skip hint logic
+
+    String lastShownDate = prefs.getString('hint_last_shown_date_$uid') ?? '';
+
+    String today = DateTime.now().toIso8601String().split('T').first;
+
+    if (lastShownDate != today) {
+      setState(() {
+        showHint = true;
+      });
+      await prefs.setString('hint_last_shown_date_$uid', today);
+    } else {
+      setState(() {
+        showHint = false;
+      });
     }
   }
 
@@ -519,6 +514,60 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
+  void _handleLogoTap() {
+    setState(() {
+      _logoTapCount++;
+      if (_logoTapCount >= 7) {
+        _logoTapCount = 0; // reset after showing
+
+        _confettiController.play();
+
+        // show secret encouraging message
+        showDialog(
+          context: context,
+          barrierDismissible: false, // 🚫 prevents tap outside to dismiss
+          builder: (context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: Colors.white,
+              titlePadding: const EdgeInsets.only(
+                top: 16,
+                left: 16,
+                right: 16,
+                bottom: 0,
+              ),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "🌟 Secret Message!",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              content: const Text(
+                "You're amazing. Keep going – your journey is beautiful 💛",
+                style: TextStyle(fontSize: 16),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Aww, thanks!"),
+                )
+              ],
+            );
+          },
+        );
+      }
+    });
+  }
+
   Widget buildMoodSuggestion(String mood) {
     final suggestions = {
       'happy':
@@ -663,8 +712,35 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 25),
-                  Image.asset(
-                    'assets/images/logo3.png',
+                  GestureDetector(
+                    onTap: _handleLogoTap,
+                    child: Image.asset(
+                      'assets/images/logo3.png',
+                    ),
+                  ),
+                  if (showHint)
+                    Text(
+                      "Psst.. Keep tapping for a surprise!",
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        // fontStyle: FontStyle.italic,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: ConfettiWidget(
+                      confettiController: _confettiController,
+                      blastDirectionality: BlastDirectionality.explosive,
+                      shouldLoop: false,
+                      emissionFrequency: 0.05,
+                      numberOfParticles: 5,
+                      gravity: 0.3,
+                      colors: [Colors.pink, Colors.red, Colors.purpleAccent],
+                      createParticlePath: (size) {
+                        return drawHeart(size);
+                      },
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
