@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WeeklyMoodInsightsScreen extends StatefulWidget {
   const WeeklyMoodInsightsScreen({Key? key}) : super(key: key);
@@ -12,11 +15,14 @@ class WeeklyMoodInsightsScreen extends StatefulWidget {
       _WeeklyMoodInsightsScreenState();
 }
 
-class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
+class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
+    with SingleTickerProviderStateMixin {
   bool isLoading = true;
   List<FlSpot> weeklySpots = [];
   List<String> weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   List<String> weeklyEmotions = [];
+
+  late AnimationController _glowController;
 
   final moodLevels = {
     'Happy': 5,
@@ -37,6 +43,17 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
   void initState() {
     super.initState();
     fetchWeeklyMoodData();
+
+    // Initialize glow animation controller
+    _glowController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2))
+          ..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _glowController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchWeeklyMoodData() async {
@@ -45,7 +62,6 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
 
     setState(() {
       isLoading = true;
-      // Reset weeklyCounts every fetch to avoid accumulation
       weeklyCounts = {
         'Happy': 0,
         'Neutral': 0,
@@ -57,7 +73,7 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
 
     DateTime now = DateTime.now();
     int daysToSunday = now.weekday % 7;
-    if (daysToSunday == 0) daysToSunday = 7; // treat Sunday as end of week
+    if (daysToSunday == 0) daysToSunday = 7;
     DateTime sunday = now.subtract(Duration(days: daysToSunday));
 
     List<FlSpot> spots = [];
@@ -78,13 +94,10 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
             .get();
 
         if (snapshot.docs.isNotEmpty) {
-          // Take the most frequent mood for the day
           Map<String, int> counts = {};
           for (var doc in snapshot.docs) {
             String emotion = doc['emotion'];
             counts[emotion] = (counts[emotion] ?? 0) + 1;
-
-            // Update weeklyCounts for each ripple
             weeklyCounts[emotion] = (weeklyCounts[emotion] ?? 0) + 1;
           }
 
@@ -95,7 +108,6 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
               i.toDouble(), moodLevels[mostFrequentEmotion]!.toDouble()));
           emotions.add(mostFrequentEmotion);
         } else {
-          // No mood recorded, consider neutral or skip
           spots.add(FlSpot(i.toDouble(), moodLevels['Neutral']!.toDouble()));
           emotions.add('Neutral');
         }
@@ -157,6 +169,7 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           "Weekly Mood Insights",
@@ -187,7 +200,7 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
                           LineChartBarData(
                             spots: weeklySpots,
                             isCurved: true,
-                            color: Colors.black54, // ✅ updated
+                            color: Colors.black54,
                             barWidth: 1,
                             dotData: FlDotData(
                               show: true,
@@ -254,18 +267,118 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen> {
                   ),
                   const SizedBox(height: 24),
                   Card(
-                    color: const Color(0xFF4ECDC4),
+                    elevation: 0,
+                    color: const Color.fromARGB(255, 255, 255, 255),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(width: 1, color: Color(0xFF4ECDC4))),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        generateWeeklySuggestion(weeklyCounts),
-                        style:
-                            const TextStyle(fontSize: 16, color: Colors.white),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.lightbulb, color: Color(0xFF4ECDC4)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              generateWeeklySuggestion(weeklyCounts),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  )
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    elevation: 0,
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(width: 1, color: Color(0xFF4ECDC4)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AnimatedBuilder(
+                            animation: _glowController,
+                            builder: (context, child) {
+                              return Transform.scale(
+                                scale: 1 + (_glowController.value * 0.05),
+                                child: child,
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                Icon(Icons.call, color: Color(0xFF4ECDC4)),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Need to talk to someone?",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "If you’re in Sri Lanka  🇱🇰 , call the 1926 National Mental Health Helpline (24/7, free, confidential, in Sinhala, Tamil, English).",
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Outside Sri Lanka?",
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              final url =
+                                  Uri.parse('https://findahelpline.com');
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(
+                                  url,
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Could not open the link')),
+                                );
+                              }
+                            },
+                            child: Row(
+                              children: [
+                                Icon(Icons.public_sharp,
+                                    color: Color(0xFF4ECDC4)),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Find hotlines in your country here",
+                                  style: GoogleFonts.outfit(
+                                      fontSize: 14,
+                                      color: Color(0xFF4ECDC4),
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
