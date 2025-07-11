@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -44,7 +42,6 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
     super.initState();
     fetchWeeklyMoodData();
 
-    // Initialize glow animation controller
     _glowController =
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
           ..repeat(reverse: true);
@@ -126,11 +123,11 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
     }
   }
 
-  String generateWeeklySuggestion(Map<String, int> weeklyCounts) {
+  Map<String, String> generateWeeklySuggestion(Map<String, int> weeklyCounts) {
     int totalRipples = weeklyCounts.values.fold(0, (a, b) => a + b);
 
     if (totalRipples == 0) {
-      return "No data to analyze this week.";
+      return {'type': 'no_data', 'text': "No data to analyze this week."};
     }
 
     final severeEmotions = {'Sad', 'Anxious', 'Angry'};
@@ -141,18 +138,34 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
     double severePercentage = severeRipples / totalRipples;
 
     if (severePercentage >= 0.5) {
-      return "This week seems tough. Consider talking to a friend, journaling deeply, or seeking professional support.";
+      return {
+        'type': 'tough_week',
+        'text':
+            "This week seems tough. Consider talking to a friend, journaling deeply, or seeking professional support."
+      };
     }
 
     if ((weeklyCounts['Happy'] ?? 0) / totalRipples >= 0.5) {
-      return "Awesome week! Keep spreading the positivity and maintain your healthy habits.";
+      return {
+        'type': 'happy_week',
+        'text':
+            "Awesome week! Keep spreading the positivity and maintain your healthy habits."
+      };
     }
 
     if ((weeklyCounts['Neutral'] ?? 0) / totalRipples >= 0.5) {
-      return "Your week was mostly neutral. Try engaging in activities that excite or challenge you.";
+      return {
+        'type': 'neutral_week',
+        'text':
+            "Your week was mostly neutral. Try engaging in activities that excite or challenge you."
+      };
     }
 
-    return "A balanced week. Keep tracking to understand your patterns better.";
+    return {
+      'type': 'balanced_week',
+      'text':
+          "A balanced week. Keep tracking to understand your patterns better."
+    };
   }
 
   Color getColorForEmotion(String emotion) {
@@ -168,6 +181,10 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final weeklySuggestion = generateWeeklySuggestion(weeklyCounts);
+    final suggestionType = weeklySuggestion['type'];
+    final suggestionText = weeklySuggestion['text'];
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -266,9 +283,11 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  /// Suggestion Card
                   Card(
                     elevation: 0,
-                    color: const Color.fromARGB(255, 255, 255, 255),
+                    color: Colors.white,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(width: 1, color: Color(0xFF4ECDC4))),
@@ -281,7 +300,7 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              generateWeeklySuggestion(weeklyCounts),
+                              suggestionText ?? '',
                               style: const TextStyle(fontSize: 16),
                             ),
                           ),
@@ -289,96 +308,101 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 16),
-                  Card(
-                    elevation: 0,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(width: 1, color: Color(0xFF4ECDC4)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AnimatedBuilder(
-                            animation: _glowController,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: 1 + (_glowController.value * 0.05),
-                                child: child,
-                              );
-                            },
-                            child: Row(
-                              children: [
-                                Icon(Icons.call, color: Color(0xFF4ECDC4)),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Need to talk to someone?",
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "If you’re in Sri Lanka  🇱🇰 , call the 1926 National Mental Health Helpline (24/7, free, confidential, in Sinhala, Tamil, English).",
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "Outside Sri Lanka?",
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: () async {
-                              final url =
-                                  Uri.parse('https://findahelpline.com');
-                              if (await canLaunchUrl(url)) {
-                                await launchUrl(
-                                  url,
-                                  mode: LaunchMode.externalApplication,
+
+                  /// Conditionally render "Need to talk to someone?" card
+                  if (suggestionType == 'tough_week')
+                    Card(
+                      elevation: 0,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(width: 1, color: Color(0xFF4ECDC4)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AnimatedBuilder(
+                              animation: _glowController,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: 1 + (_glowController.value * 0.05),
+                                  child: child,
                                 );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Could not open the link')),
-                                );
-                              }
-                            },
-                            child: Row(
-                              children: [
-                                Icon(Icons.public_sharp,
-                                    color: Color(0xFF4ECDC4)),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Find hotlines in your country here",
-                                  style: GoogleFonts.outfit(
-                                      fontSize: 14,
-                                      color: Color(0xFF4ECDC4),
+                              },
+                              child: Row(
+                                children: [
+                                  Icon(Icons.call, color: Color(0xFF4ECDC4)),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Need to talk to someone?",
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline),
-                                ),
-                              ],
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Text(
+                              "If you’re in Sri Lanka 🇱🇰 , call the 1926 National Mental Health Helpline (24/7, free, confidential, in Sinhala, Tamil, English).",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Outside Sri Lanka?",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () async {
+                                final url =
+                                    Uri.parse('https://findahelpline.com');
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(
+                                    url,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text('Could not open the link')),
+                                  );
+                                }
+                              },
+                              child: Row(
+                                children: [
+                                  Icon(Icons.public_sharp,
+                                      color: Color(0xFF4ECDC4)),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Find hotlines in your country here",
+                                    style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        color: Color(0xFF4ECDC4),
+                                        fontWeight: FontWeight.w600,
+                                        decoration: TextDecoration.underline),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
