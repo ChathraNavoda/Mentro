@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mentro/presentation/screens/analytics/happy_paradise.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WeeklyMoodInsightsScreen extends StatefulWidget {
@@ -149,7 +150,7 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
       return {
         'type': 'happy_week',
         'text':
-            "Awesome week! Keep spreading the positivity and maintain your healthy habits."
+            "Awesome week! Use this joy to set a new goal or visit your Happy Paradise to reflect and continue your positivity journey."
       };
     }
 
@@ -311,6 +312,39 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
 
                   const SizedBox(height: 16),
 
+                  if (suggestionType == 'happy_week')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => HappyParadiseScreen()));
+                        },
+                        icon: Icon(Icons.emoji_emotions, color: Colors.white),
+                        label: Text(
+                          "Go to Happy Paradise",
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF4ECDC4),
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
                   /// Conditionally render "Need to talk to someone?" card
                   if (suggestionType == 'tough_week')
                     Card(
@@ -403,6 +437,8 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                         ),
                       ),
                     ),
+
+                  //
                 ],
               ),
             ),
