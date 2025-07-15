@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/presentation/screens/analytics/happy_paradise.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'neutral_spark_screen.dart';
+
 class WeeklyMoodInsightsScreen extends StatefulWidget {
   const WeeklyMoodInsightsScreen({Key? key}) : super(key: key);
 
@@ -439,6 +441,38 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                     ),
 
                   //
+                  if (suggestionType == 'neutral_week')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF4ECDC4),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NeutralSparkScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.flash_on, color: Colors.white),
+                        label: Text(
+                          "Get Your Spark",
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
