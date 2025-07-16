@@ -7,6 +7,7 @@ import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
 import 'package:mentro/presentation/screens/settings/privacy_webview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../main.dart';
 
@@ -78,8 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(
                 width: 0,
-                //color: Color(0xFF4ECDC4),
-                color: Color.fromARGB(255, 0, 0, 0),
+                color: Colors.black,
               ),
             ),
             child: Padding(
@@ -110,7 +110,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text(
                         user?.displayName ?? '',
                         style: GoogleFonts.outfit(
-                            fontSize: 16, fontWeight: FontWeight.w500),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Text(
                         user?.email ?? '',
@@ -129,45 +131,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 20),
 
-          // Mood Reminder
-          // SwitchListTile(
-          //   activeTrackColor: const Color(0xFF4ECDC4),
-          //   value: isReminderOn,
-          //   onChanged: (val) {
-          //     setState(() => isReminderOn = val);
-          //     // TODO: Implement scheduling logic with flutter_local_notifications
-          //   },
-          //   title: Text(
-          //     "Daily Mood Reminder",
-          //     style:
-          //         GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500),
-          //   ),
-          //   subtitle: Text("Get notified to track your emotions"),
-          //   secondary: Icon(
-          //     Icons.notifications_active_outlined,
-          //   ),
-          // ),
-
-          // Dark Mode Toggle
-          // SwitchListTile(
-          //   activeTrackColor: const Color(0xFF4ECDC4),
-          //   value: isDarkMode,
-          //   onChanged: (val) {
-          //     setState(() => isDarkMode = val);
-          //     // TODO: Integrate with actual theme provider if needed
-          //   },
-          //   title: Text(
-          //     "Dark Mode",
-          //     style:
-          //         GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500),
-          //   ),
-          //   subtitle: Text("Switch between light and dark themes"),
-          //   secondary: Icon(
-          //     Icons.dark_mode,
-          //   ),
-          // ),
-
-          // 🔒 Protect Archived Ripples
+          // Protect Archived Ripples
           SwitchListTile(
             activeTrackColor: const Color(0xFF4ECDC4),
             value: _isArchiveProtected,
@@ -181,12 +145,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             subtitle: Text(
               "Require authentication to view archived entries",
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-              ),
+              style:
+                  GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w400),
             ),
-            secondary: const Icon(Icons.lock),
+            secondary: const Icon(Icons.lock, color: Color(0xFF4ECDC4)),
           ),
 
           const Divider(),
@@ -194,28 +156,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // About Mentro
           ListTile(
             tileColor: Colors.white,
-            leading: Icon(Icons.info_outline),
+            leading: Icon(Icons.info_outline, color: Color(0xFF4ECDC4)),
             title: Text(
               "About Mentro",
               style:
-                  GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w400),
+                  GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             onTap: () {
               showAboutDialog(
                 context: context,
                 applicationName: "Mentro",
                 applicationVersion: "1.0.0",
-                applicationIcon: Image.asset(
-                  'assets/images/logo3.png',
-                ),
+                applicationIcon:
+                    Image.asset('assets/images/logo3.png', height: 48),
                 children: [
                   Text(
                     "Mentro is an emotion tracking app that helps you understand your mental state better and build emotional awareness over time.",
                     style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
+                        fontSize: 15, fontWeight: FontWeight.w400),
+                  ),
                 ],
               );
             },
@@ -223,11 +182,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // Privacy Policy
           ListTile(
-            leading: Icon(Icons.lock_outline),
+            tileColor: Colors.white,
+            leading: Icon(Icons.lock_outline, color: Color(0xFF4ECDC4)),
             title: Text(
               "Privacy Policy",
               style:
-                  GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w400),
+                  GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             onTap: () {
               showDialog(
@@ -236,19 +196,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   backgroundColor: Colors.white,
                   title: Text(
                     "Privacy Policy",
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w400,
-                    ),
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
                   ),
                   content: Text(
                     "We value your privacy. No data is shared.",
                     style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
+                        fontSize: 15, fontWeight: FontWeight.w400),
                   ),
                   actions: [
-                    TextButton(
+                    TextButton.icon(
                       onPressed: () {
                         Navigator.pop(context); // close dialog
                         Navigator.push(
@@ -260,7 +216,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         );
                       },
-                      child: Text(
+                      icon: Icon(Icons.open_in_new, color: Color(0xFF4ECDC4)),
+                      label: Text(
                         "View Full Policy",
                         style: GoogleFonts.outfit(
                           color: Color(0xFF4ECDC4),
@@ -286,19 +243,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // Contact Support
           ListTile(
-            leading: Icon(Icons.mail_outline),
+            tileColor: Colors.white,
+            leading: Icon(Icons.mail_outline, color: Color(0xFF4ECDC4)),
             title: Text(
               "Contact Support",
               style:
-                  GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w400),
+                  GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             onTap: () {
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
                   backgroundColor: Colors.white,
-                  title: Text("Support"),
-                  content: Text("Email us at: mentro.ripple@gmail.com"),
+                  title: Text(
+                    "Support",
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Email us\n",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () async {
+                          Navigator.pop(context); // close dialog first
+
+                          // Optional: Show a temporary message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Opening Gmail... Swipe back to return to Mentro.'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+
+                          final Uri emailUri = Uri(
+                            scheme: 'mailto',
+                            path: 'mentro.ripple@gmail.com',
+                            query: Uri.encodeFull('subject=Support Request'),
+                          );
+
+                          if (await canLaunchUrl(emailUri)) {
+                            await launchUrl(
+                              emailUri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Could not open email client')),
+                            );
+                          }
+                        },
+                        child: Text(
+                          "mentro.ripple@gmail.com",
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            color: Color(0xFF4ECDC4),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -316,16 +331,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
+          // Visit Website
+          ListTile(
+            tileColor: Colors.white,
+            leading: Icon(Icons.language, color: Color(0xFF4ECDC4)),
+            title: Text(
+              "Visit Website",
+              style:
+                  GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            onTap: () async {
+              final url = Uri.parse("https://mentro-31a64.web.app/");
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Could not open the website")),
+                );
+              }
+            },
+          ),
+          // ListTile(
+          //   tileColor: Colors.white,
+          //   leading: Icon(Icons.language, color: Color(0xFF4ECDC4)),
+          //   title: Text(
+          //     "Visit Website",
+          //     style:
+          //         GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w500),
+          //   ),
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (_) => const PrivacyWebView(
+          //             url: "https://mentro-31a64.web.app/"),
+          //       ),
+          //     );
+          //   },
+          // ),
+
           const SizedBox(height: 30),
 
           // Logout
           Center(
             child: TextButton.icon(
-              icon: Icon(
-                Icons.logout,
-                color: Colors.red,
-                size: 25,
-              ),
+              icon: Icon(Icons.logout, color: Colors.red, size: 25),
               label: Text(
                 "Logout",
                 style: GoogleFonts.outfit(
@@ -341,15 +391,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     backgroundColor: Colors.white,
                     title: Text(
                       "Confirm Logout",
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w400,
-                      ),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
                     ),
                     content: Text(
                       "Are you sure you want to logout?",
                       style: GoogleFonts.outfit(
                         fontSize: 15,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                     actions: [
@@ -366,19 +414,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       TextButton(
                         onPressed: () async {
                           Navigator.of(context).pop(); // close dialog first
-
                           await AuthService().logout();
-
                           if (!mounted) return;
 
-                          // ✅ Show snackbar using global key
                           scaffoldMessengerKey.currentState?.showSnackBar(
                             SnackBar(content: Text('You are logged out.')),
                           );
 
-                          // ✅ Delay briefly to ensure Firestore listeners clean up before navigation
                           Future.delayed(Duration(milliseconds: 300), () {
-                            // ✅ Use rootNavigator to avoid disposed context
                             navigatorKey.currentState?.pushAndRemoveUntil(
                               MaterialPageRoute(builder: (_) => LoginScreen()),
                               (route) => false,

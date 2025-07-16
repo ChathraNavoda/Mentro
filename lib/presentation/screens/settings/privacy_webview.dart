@@ -19,19 +19,9 @@ class _PrivacyWebViewState extends State<PrivacyWebView> {
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onNavigationRequest: (request) {
-            if (request.url == widget.url) {
-              // Allow loading the privacy policy URL
-              return NavigationDecision.navigate;
-            } else {
-              // Block any other URLs
-              return NavigationDecision.prevent;
-            }
-          },
-        ),
-      )
+      ..setBackgroundColor(Colors.transparent)
+      ..setUserAgent(
+          "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.65 Mobile Safari/537.36")
       ..loadRequest(Uri.parse(widget.url));
   }
 
