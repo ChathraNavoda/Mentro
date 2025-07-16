@@ -127,12 +127,29 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
   }
 
   Map<String, String> generateWeeklySuggestion(Map<String, int> weeklyCounts) {
+    DateTime now = DateTime.now(); // 🔧 FIX: use current date dynamically
+    //DateTime now = DateTime(2025, 7, 7);
     int totalRipples = weeklyCounts.values.fold(0, (a, b) => a + b);
 
-    if (totalRipples == 0) {
-      return {'type': 'no_data', 'text': "No data to analyze this week."};
+    // If today is not Monday, show waiting message
+    if (now.weekday != DateTime.monday) {
+      return {
+        'type': 'wait',
+        'text':
+            "Your weekly insights will be ready next Monday. Keep adding ripples daily for accurate insights!"
+      };
     }
 
+    // If it's Monday but data is insufficient
+    if (totalRipples < 5) {
+      return {
+        'type': 'insufficient_data',
+        'text':
+            "We need more data to analyze last week accurately. Keep adding your mood ripples regularly for valuable insights."
+      };
+    }
+
+    // Proceed with existing suggestion logic
     final severeEmotions = {'Sad', 'Anxious', 'Angry'};
     int severeRipples = weeklyCounts.entries
         .where((e) => severeEmotions.contains(e.key))
@@ -288,31 +305,60 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                   const SizedBox(height: 24),
 
                   /// Suggestion Card
-                  Card(
-                    elevation: 0,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(width: 1, color: Color(0xFF4ECDC4))),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.lightbulb, color: Color(0xFF4ECDC4)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              suggestionText ?? '',
-                              style: const TextStyle(fontSize: 16),
+                  /// Suggestion Card
+                  if (suggestionType == 'wait' ||
+                      suggestionType == 'insufficient_data')
+                    Card(
+                      elevation: 0,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(width: 1, color: Color(0xFF4ECDC4))),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.info_outline,
+                                color: Color(0xFF4ECDC4)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                suggestionText ?? '',
+                                style: const TextStyle(fontSize: 16),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    Card(
+                      elevation: 0,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(width: 1, color: Color(0xFF4ECDC4))),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.lightbulb,
+                                color: Color(0xFF4ECDC4)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                suggestionText ?? '',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 16),
+                  /// Existing suggestion cards logic...
 
                   if (suggestionType == 'happy_week')
                     Padding(
