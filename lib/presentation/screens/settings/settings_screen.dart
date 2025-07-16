@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/presentation/screens/auth/login_screen.dart';
+import 'package:mentro/presentation/screens/settings/privacy_webview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../main.dart';
@@ -248,15 +249,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        Navigator.pop(context); // close dialog
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PrivacyWebView(
+                                url:
+                                    "https://mentro-31a64.web.app/privacy.html"),
+                          ),
+                        );
+                      },
                       child: Text(
-                        "OK",
+                        "View Full Policy",
                         style: GoogleFonts.outfit(
                           color: Color(0xFF4ECDC4),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                    )
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        "Close",
+                        style: GoogleFonts.outfit(
+                          color: Color(0xFF4ECDC4),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               );
