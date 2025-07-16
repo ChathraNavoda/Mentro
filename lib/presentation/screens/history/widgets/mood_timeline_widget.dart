@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class MoodTimelineWidget extends StatefulWidget {
-  final bool isArchiveProtected;
-  const MoodTimelineWidget({super.key, required this.isArchiveProtected});
+  const MoodTimelineWidget({super.key});
 
   @override
   State<MoodTimelineWidget> createState() => _MoodTimelineWidgetState();
@@ -23,11 +23,26 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
   DateTime? _selectedDay;
   List<Map<String, dynamic>> _selectedRipples = [];
   bool _archiveUnlocked = false;
+  bool isArchiveProtected = false;
 
   @override
   void initState() {
     super.initState();
+    _loadArchiveProtection();
     _fetchRipples();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadArchiveProtection();
+  }
+
+  Future<void> _loadArchiveProtection() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isArchiveProtected = prefs.getBool('isArchiveProtected') ?? false;
+    });
   }
 
   Future<void> _fetchRipples() async {
@@ -165,8 +180,8 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
             child: ElevatedButton.icon(
               onPressed: () async {
                 if (!_archiveUnlocked) {
-                  // Trying to unlock
-                  if (widget.isArchiveProtected) {
+                  if (isArchiveProtected) {
+                    // authenticate as before
                     try {
                       final auth = LocalAuthentication();
                       final canCheckBiometrics = await auth.canCheckBiometrics;
@@ -185,8 +200,7 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
                         localizedReason:
                             'Please authenticate to view archived ripples',
                         options: const AuthenticationOptions(
-                          biometricOnly:
-                              true, // You can change to false for PIN fallback
+                          biometricOnly: true,
                           stickyAuth: true,
                         ),
                       );
@@ -208,6 +222,12 @@ class _MoodTimelineWidgetState extends State<MoodTimelineWidget> {
                         SnackBar(content: Text('Authentication error: $e')),
                       );
                     }
+                  } else {
+                    // ✅ if not protected, unlock directly
+                    setState(() {
+                      _archiveUnlocked = true;
+                      _updateSelectedRipples(_selectedDay!);
+                    });
                   }
                 } else {
                   // Locking
