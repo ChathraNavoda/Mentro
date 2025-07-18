@@ -128,7 +128,9 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
 
   Map<String, String> generateWeeklySuggestion(Map<String, int> weeklyCounts) {
     DateTime now = DateTime.now(); // 🔧 FIX: use current date dynamically
-    //DateTime now = DateTime(2025, 7, 7);
+    //DateTime now = DateTime(2025, 7, 14); // Monday for testing
+
+    //DateTime now = DateTime(2025, 7, 13);
     int totalRipples = weeklyCounts.values.fold(0, (a, b) => a + b);
 
     // If today is not Monday, show waiting message
@@ -422,7 +424,7 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                                   Text(
                                     "Need to talk to someone?",
                                     style: GoogleFonts.outfit(
-                                      fontSize: 16,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.red,
                                     ),
@@ -431,18 +433,39 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              "If you’re in Sri Lanka 🇱🇰 , call the 1926 National Mental Health Helpline (24/7, free, confidential, in Sinhala, Tamil, English).",
-                              style: GoogleFonts.outfit(
-                                fontSize: 14,
-                                color: Colors.black87,
+                            RichText(
+                              text: TextSpan(
+                                style: GoogleFonts.outfit(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black87,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text:
+                                        "If you’re in Sri Lanka 🇱🇰 , call \n",
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        "1926 National Mental Health Helpline\n",
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.w600, // bold
+                                      color: Color(
+                                          0xFF4ECDC4), // your accent color
+                                    ),
+                                  ),
+                                  TextSpan(
+                                      text:
+                                          "24/7, free, confidential, in සිංහල, தமிழ், English",
+                                      style: TextStyle(fontSize: 15)),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 12),
                             Text(
                               "Outside Sri Lanka?",
                               style: GoogleFonts.outfit(
-                                fontSize: 14,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
                               ),
@@ -473,7 +496,7 @@ class _WeeklyMoodInsightsScreenState extends State<WeeklyMoodInsightsScreen>
                                   Text(
                                     "Find hotlines in your country here",
                                     style: GoogleFonts.outfit(
-                                        fontSize: 14,
+                                        fontSize: 15,
                                         color: Color(0xFF4ECDC4),
                                         fontWeight: FontWeight.w600,
                                         decoration: TextDecoration.underline),

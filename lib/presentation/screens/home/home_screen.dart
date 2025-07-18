@@ -720,7 +720,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   if (showHint)
                     Text(
-                      "Psst.. Keep tapping for a surprise!",
+                      "Psst.. Keep tapping the logo\nfor a surprise!",
                       style: GoogleFonts.outfit(
                         fontSize: 10,
                         // fontStyle: FontStyle.italic,

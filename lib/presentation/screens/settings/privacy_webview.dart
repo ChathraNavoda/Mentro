@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class PrivacyWebView extends StatefulWidget {
@@ -29,7 +30,14 @@ class _PrivacyWebViewState extends State<PrivacyWebView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Privacy Policy"),
+        title: Text(
+          "Privacy Policy",
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: const Color(0xFF4ECDC4),
       ),
       body: WebViewWidget(controller: _controller),
