@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keyboard_safe/keyboard_safe.dart';
 import 'package:mentro/core/services/auth_service.dart';
 import 'package:mentro/core/services/google_service.dart';
 import 'package:mentro/presentation/common/button_widget.dart';
@@ -73,19 +74,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
+      body: KeyboardSafe(
+        scroll: true,
+        autoScrollToFocused: true,
+        dismissOnTapOutside: true,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
-              height: height / 3.7,
+              height: MediaQuery.of(context).size.height / 3.7,
               width: double.infinity,
-              child: Image.asset(
-                'assets/images/logo3.png',
-              ),
+              child: Image.asset('assets/images/logo3.png'),
             ),
             TextFieldInput(
               textEditingController: emailController,
@@ -103,42 +105,35 @@ class _LoginScreenState extends State<LoginScreen> {
               text: isLoading ? 'Loading...' : 'Signin',
             ),
             ForgotPassword(),
-            SizedBox(height: height / 40),
+            const SizedBox(height: 20),
             Row(
               children: [
-                Expanded(
-                  child: Container(
-                    height: 1,
-                    color: const Color.fromARGB(111, 0, 0, 0),
-                  ),
+                const Expanded(
+                  child: Divider(color: Color.fromARGB(111, 0, 0, 0)),
                 ),
-                Text('Or'),
-                Expanded(
-                  child: Container(
-                    height: 1,
-                    color: const Color.fromARGB(111, 0, 0, 0),
-                  ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text('Or'),
+                ),
+                const Expanded(
+                  child: Divider(color: Color.fromARGB(111, 0, 0, 0)),
                 ),
               ],
             ),
             InkWell(
               onTap: () async {
                 setState(() => isLoading = true);
-
                 String res = await GoogleService().signInWithGoogle();
-
-                if (!mounted) return; // ✅
-
+                if (!mounted) return;
                 setState(() => isLoading = false);
 
                 if (res == 'success') {
                   showSnackBar(context,
                       'Welcome to Mentro! You have logged in successfully.');
                   Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const CustomBottomNavbar()),
-                  );
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const CustomBottomNavbar()));
                 } else {
                   showSnackBar(context, res);
                 }
@@ -147,13 +142,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.all(20.0),
                 child: Container(
                   alignment: Alignment.center,
-                  padding: EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: ShapeDecoration(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
-                      side: const BorderSide(
-                        color: Color.fromARGB(122, 0, 0, 0),
-                      ),
+                      side:
+                          const BorderSide(color: Color.fromARGB(122, 0, 0, 0)),
                     ),
                     color: Colors.white,
                   ),
@@ -179,23 +173,19 @@ class _LoginScreenState extends State<LoginScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Don\'t have an account? ',
                   style: TextStyle(
-                    fontSize: 16,
-                    color: Color.fromARGB(128, 0, 0, 0),
-                  ),
+                      fontSize: 16, color: Color.fromARGB(128, 0, 0, 0)),
                 ),
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => SignupScreen(),
-                      ),
+                      MaterialPageRoute(builder: (context) => SignupScreen()),
                     );
                   },
-                  child: Text(
+                  child: const Text(
                     'Signup',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
