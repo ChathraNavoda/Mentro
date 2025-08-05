@@ -68,6 +68,8 @@ dependencies:
   flip_card: ^0.7.0
   webview_flutter: ^4.13.0
   internet_connection_checker: ^3.0.1
+  keyboard_safe: ^1.0.0
+ 
 
 
 dev_dependencies:
