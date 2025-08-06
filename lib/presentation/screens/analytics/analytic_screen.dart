@@ -391,220 +391,282 @@ class _MoodAnalyticsScreenState extends State<MoodAnalyticsScreen> {
           ),
         ],
       ),
-      body: isLoading
+      // Replace the current body logic with this improved version
+
+      body: isLoading || isWeeklyLoading
           ? const Center(child: CircularProgressIndicator())
-          : emotionCounts.isEmpty
-              ? const Center(child: Text("No mood data found for this date."))
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Text(
-                          'Mood Breakdown for ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                          style: GoogleFonts.outfit(
-                              fontSize: 20, fontWeight: FontWeight.w500),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        buildEmotionPercentages(
-                          {
-                            for (var e in [
-                              'Happy',
-                              'Sad',
-                              'Angry',
-                              'Anxious',
-                              'Neutral'
-                            ])
-                              if (emotionCounts.containsKey(e) &&
-                                  totalEmotions > 0)
-                                e: (emotionCounts[e]! / totalEmotions) * 100,
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: AspectRatio(
-                                aspectRatio: 4,
-                                child: BarChart(
-                                  BarChartData(
-                                    maxY: 100,
-                                    barTouchData: BarTouchData(enabled: false),
-                                    titlesData: FlTitlesData(
-                                      bottomTitles: AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      ),
-                                      leftTitles: AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      ),
-                                      topTitles: AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      ),
-                                      rightTitles: AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      ),
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // DAILY ANALYTICS SECTION
+                    Text(
+                      'Mood Breakdown for ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                      style: GoogleFonts.outfit(
+                          fontSize: 20, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Show daily analytics only if there's data for selected date
+                    if (emotionCounts.isNotEmpty) ...[
+                      buildEmotionPercentages({
+                        for (var e in [
+                          'Happy',
+                          'Sad',
+                          'Angry',
+                          'Anxious',
+                          'Neutral'
+                        ])
+                          if (emotionCounts.containsKey(e) && totalEmotions > 0)
+                            e: (emotionCounts[e]! / totalEmotions) * 100,
+                      }),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AspectRatio(
+                              aspectRatio: 4,
+                              child: BarChart(
+                                BarChartData(
+                                  maxY: 100,
+                                  barTouchData: BarTouchData(enabled: false),
+                                  titlesData: FlTitlesData(
+                                    bottomTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
                                     ),
-                                    gridData: FlGridData(show: false),
-                                    borderData: FlBorderData(show: false),
-                                    barGroups: getBarChartData(),
+                                    leftTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                    topTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                    rightTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
                                   ),
-                                  swapAnimationDuration: Duration(
-                                      milliseconds:
-                                          1200), // ⏱ Animate bar growth
-                                  swapAnimationCurve: Curves.easeInOut,
+                                  gridData: FlGridData(show: false),
+                                  borderData: FlBorderData(show: false),
+                                  barGroups: getBarChartData(),
                                 ),
+                                swapAnimationDuration:
+                                    Duration(milliseconds: 1200),
+                                swapAnimationCurve: Curves.easeInOut,
                               ),
                             ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: AspectRatio(
-                                  aspectRatio: 1,
-                                  child: PieChart(
-                                    PieChartData(
-                                      sections: getMoodPieChartData(),
-                                      centerSpaceRadius: 30,
-                                      pieTouchData:
-                                          PieTouchData(enabled: false),
-                                      startDegreeOffset: 270,
-                                      sectionsSpace: 3,
-                                      borderData: FlBorderData(show: false),
-                                    ),
-                                    swapAnimationDuration: Duration(
-                                        milliseconds: 1000), // ⏱ Animate entry
-                                    swapAnimationCurve: Curves.easeInOut,
-                                  )),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: AspectRatio(
+                                aspectRatio: 1,
+                                child: PieChart(
+                                  PieChartData(
+                                    sections: getMoodPieChartData(),
+                                    centerSpaceRadius: 30,
+                                    pieTouchData: PieTouchData(enabled: false),
+                                    startDegreeOffset: 270,
+                                    sectionsSpace: 3,
+                                    borderData: FlBorderData(show: false),
+                                  ),
+                                  swapAnimationDuration:
+                                      Duration(milliseconds: 1000),
+                                  swapAnimationCurve: Curves.easeInOut,
+                                )),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      buildLegend(),
+                    ] else ...[
+                      // Show helpful message when no data for selected date
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.mood_outlined,
+                              size: 48,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No ripples recorded for this date',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Add a ripple for ${selectedDate.day}/${selectedDate.month}/${selectedDate.year} to see daily analytics',
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        buildLegend(),
-                        const SizedBox(height: 32),
-                        Divider(color: Colors.grey.shade400),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Weekly Mood Trends (Sun-Sat)',
-                          style: GoogleFonts.outfit(
-                              fontSize: 20, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(height: 6),
-                        Text("Tap on a bar to see the daily mood analytics.",
-                            style: GoogleFonts.outfit(
-                                fontSize: 11, fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 16),
-                        isWeeklyLoading
-                            ? const CircularProgressIndicator()
-                            : weeklyEmotionCounts.isEmpty
-                                ? const Text('No weekly data available.')
-                                : AspectRatio(
-                                    aspectRatio: 1.7,
-                                    child: BarChart(
-                                      BarChartData(
-                                        maxY:
-                                            _calculateMaxY(weeklyEmotionCounts),
+                      ),
+                    ],
 
-                                        ///
-                                        barTouchData: BarTouchData(
-                                          enabled: true,
-                                          touchCallback:
-                                              (event, response) async {
-                                            if (event
-                                                    .isInterestedForInteractions &&
-                                                response != null &&
-                                                !isNavigating) {
-                                              final index = response
-                                                  .spot?.touchedBarGroupIndex;
-                                              if (index != null) {
-                                                isNavigating = true;
+                    const SizedBox(height: 32),
+                    Divider(color: Colors.grey.shade400),
+                    const SizedBox(height: 24),
 
-                                                final now = DateTime.now();
-                                                final weekStartDate =
-                                                    now.subtract(Duration(
-                                                        days: now.weekday % 7));
-                                                final targetDate = weekStartDate
-                                                    .add(Duration(days: index));
-
-                                                await Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        DailyAnalysisLoaderScreen(
-                                                            selectedDate:
-                                                                targetDate),
-                                                  ),
-                                                );
-
-                                                isNavigating =
-                                                    false; // reset after coming back
-                                              }
-                                            }
-                                          },
-                                        ),
-
-                                        ///
-                                        titlesData: FlTitlesData(
-                                          bottomTitles: AxisTitles(
-                                            sideTitles: SideTitles(
-                                              showTitles: true,
-                                              getTitlesWidget: (value, meta) {
-                                                int index = value.toInt();
-                                                if (index < 0 || index > 6) {
-                                                  return const SizedBox
-                                                      .shrink();
-                                                }
-                                                // Calculate the correct weekday label
-                                                int daysToSunday =
-                                                    selectedDate.weekday % 7;
-                                                DateTime sunday = DateTime(
-                                                        selectedDate.year,
-                                                        selectedDate.month,
-                                                        selectedDate.day)
-                                                    .subtract(Duration(
-                                                        days: daysToSunday));
-                                                DateTime day = sunday
-                                                    .add(Duration(days: index));
-                                                String label =
-                                                    DateFormat('E').format(day);
-
-                                                return Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 6),
-                                                  child: Text(label,
-                                                      style: GoogleFonts.outfit(
-                                                          fontSize: 14,
-                                                          color: Colors.black)),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          leftTitles: AxisTitles(
-                                            sideTitles:
-                                                SideTitles(showTitles: false),
-                                          ),
-                                          topTitles: AxisTitles(
-                                            sideTitles:
-                                                SideTitles(showTitles: false),
-                                          ),
-                                          rightTitles: AxisTitles(
-                                            sideTitles:
-                                                SideTitles(showTitles: false),
-                                          ),
-                                        ),
-                                        gridData: FlGridData(show: true),
-                                        borderData: FlBorderData(show: false),
-                                        barGroups: _generateWeeklyBarGroups(),
-                                      ),
-                                    ),
-                                  ),
-                      ],
+                    // WEEKLY ANALYTICS SECTION - Always show if there's any weekly data
+                    Text(
+                      'Weekly Mood Trends (Sun-Sat)',
+                      style: GoogleFonts.outfit(
+                          fontSize: 20, fontWeight: FontWeight.w500),
                     ),
-                  ),
+                    const SizedBox(height: 6),
+                    Text("Tap on a bar to see the daily mood analytics.",
+                        style: GoogleFonts.outfit(
+                            fontSize: 11, fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 16),
+
+                    // Check if there's ANY data in the weekly counts
+                    if (_hasWeeklyData()) ...[
+                      AspectRatio(
+                        aspectRatio: 1.7,
+                        child: BarChart(
+                          BarChartData(
+                            maxY: _calculateMaxY(weeklyEmotionCounts),
+                            barTouchData: BarTouchData(
+                              enabled: true,
+                              touchCallback: (event, response) async {
+                                if (event.isInterestedForInteractions &&
+                                    response != null &&
+                                    !isNavigating) {
+                                  final index =
+                                      response.spot?.touchedBarGroupIndex;
+                                  if (index != null) {
+                                    isNavigating = true;
+                                    final now = DateTime.now();
+                                    final weekStartDate = now.subtract(
+                                        Duration(days: now.weekday % 7));
+                                    final targetDate = weekStartDate
+                                        .add(Duration(days: index));
+
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            DailyAnalysisLoaderScreen(
+                                                selectedDate: targetDate),
+                                      ),
+                                    );
+
+                                    isNavigating = false;
+                                  }
+                                }
+                              },
+                            ),
+                            titlesData: FlTitlesData(
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    int index = value.toInt();
+                                    if (index < 0 || index > 6) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    int daysToSunday = selectedDate.weekday % 7;
+                                    DateTime sunday = DateTime(
+                                            selectedDate.year,
+                                            selectedDate.month,
+                                            selectedDate.day)
+                                        .subtract(Duration(days: daysToSunday));
+                                    DateTime day =
+                                        sunday.add(Duration(days: index));
+                                    String label = DateFormat('E').format(day);
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: Text(label,
+                                          style: GoogleFonts.outfit(
+                                              fontSize: 14,
+                                              color: Colors.black)),
+                                    );
+                                  },
+                                ),
+                              ),
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              topTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              rightTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                            ),
+                            gridData: FlGridData(show: true),
+                            borderData: FlBorderData(show: false),
+                            barGroups: _generateWeeklyBarGroups(),
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      // Show message when no weekly data available
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.bar_chart_outlined,
+                              size: 48,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No weekly data available',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Start adding ripples to see your weekly mood trends',
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
+              ),
+            ),
     );
+  }
+
+// Add this helper method to your _MoodAnalyticsScreenState class
+  bool _hasWeeklyData() {
+    for (var counts in weeklyEmotionCounts.values) {
+      if (counts.values.fold(0, (a, b) => a + b) > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 }
