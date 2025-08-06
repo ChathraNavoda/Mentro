@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:mentro/presentation/screens/home/add_ripple_screen.dart';
 import 'package:mentro/presentation/screens/ripples/updateRippleScreen.dart';
 import 'package:mentro/presentation/screens/ripples/view_ripple_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -151,9 +152,53 @@ class _RippleScreenState extends State<RippleScreen> {
 
           if (ripples.isEmpty) {
             return Center(
-              child: Text(showArchived
-                  ? "No archived ripples found."
-                  : "No ripples found."),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    showArchived
+                        ? "No archived ripples found."
+                        : "No ripples found.",
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (!showArchived)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddRippleScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.add_circle_outline,
+                          color: Colors.white),
+                      label: Text(
+                        "Add Emotion Ripple",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFF4ECDC4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             );
           }
 
