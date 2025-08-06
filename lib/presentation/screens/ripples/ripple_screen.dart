@@ -280,6 +280,7 @@ class _RippleScreenState extends State<RippleScreen> {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
+                              backgroundColor: Colors.white,
                               title: const Text('Archive Ripple'),
                               content: Text(
                                 'Are you sure you want to archive this ripple?',
@@ -333,6 +334,7 @@ class _RippleScreenState extends State<RippleScreen> {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
+                              backgroundColor: Colors.white,
                               surfaceTintColor: Colors.white,
                               title: Text(
                                 'Delete Ripple',
@@ -397,6 +399,7 @@ class _RippleScreenState extends State<RippleScreen> {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
+                              backgroundColor: Colors.white,
                               title: const Text('Unarchive Ripple'),
                               content: Text(
                                 'Are you sure you want to unarchive this ripple? It will appear back in the main ripple list.',
