@@ -38,6 +38,22 @@
           }
         },
         {
+          "client_id": "194665787546-ooqur4top6udb6rdjtl984j583qfqf1k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mentro.app",
+            "certificate_hash": "1b72e11708a9aa8a238f02f9b466defc241d2bc7"
+          }
+        },
+        {
+          "client_id": "194665787546-q5a38p4dap7ir8r274b7o0h5s97blo7j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mentro.app",
+            "certificate_hash": "f5eaf84e4c571066f42a595ad73c4a96b5b248cf"
+          }
+        },
+        {
           "client_id": "194665787546-d59b3gsds0ps7n2arq8jsiv0bjp04893.apps.googleusercontent.com",
           "client_type": 3
         }
